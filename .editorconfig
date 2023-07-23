@@ -1,0 +1,29 @@
+﻿# Remove the line below if you want to inherit .editorconfig settings from higher directories
+root = true
+
+#### Define style ####
+
+# All files
+[*]
+indent_style = space
+
+# C# Project, JS and CSS files
+[*.{csproj,js,ts,css,scss}]
+indent_size = 2
+
+#### Suppress warnings ####
+
+# C# files
+[*.cs]
+
+# CA1031: Catch general exception types for process next video in case of some error
+dotnet_diagnostic.CA1031.severity = none
+
+# CA1054: Uri parameters should not be strings
+dotnet_diagnostic.CA1054.severity = none    # This library needs also strings
+
+# CA1056: Uri properties should not be strings
+dotnet_diagnostic.CA1056.severity = none    # This library needs also strings
+
+# CA2234: Pass system uri objects instead of strings
+dotnet_diagnostic.CA2234.severity = none

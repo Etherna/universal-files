@@ -31,6 +31,8 @@ namespace Etherna.UniversalFiles
             UniversalUri fileUri,
             IHttpClientFactory httpClientFactory)
         {
+            ArgumentNullException.ThrowIfNull(fileUri, nameof(fileUri));
+            
             FileUri = fileUri;
             HttpClientFactory = httpClientFactory;
         }
@@ -111,7 +113,7 @@ namespace Etherna.UniversalFiles
             }
         }
 
-        public async Task<(byte[] ByteArray, Encoding? Encoding)> ReadAsByteArrayAsync(
+        public async Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(
             bool useCacheIfOnline = false,
             UniversalUriKind allowedUriKinds = UniversalUriKind.All,
             string? baseDirectory = null)
@@ -140,7 +142,7 @@ namespace Etherna.UniversalFiles
             }
         }
 
-        public async Task<(Stream Stream, Encoding? Encoding)> ReadAsStreamAsync(
+        public async Task<(Stream Stream, Encoding? Encoding)> ReadToStreamAsync(
             UniversalUriKind allowedUriKinds = UniversalUriKind.All,
             string? baseDirectory = null)
         {
@@ -157,12 +159,12 @@ namespace Etherna.UniversalFiles
             };
         }
 
-        public async Task<string> ReadAsStringAsync(
+        public async Task<string> ReadToStringAsync(
             bool useCacheIfOnline = false,
             UniversalUriKind allowedUriKinds = UniversalUriKind.All,
             string? baseDirectory = null)
         {
-            var (content, encoding) = await ReadAsByteArrayAsync(useCacheIfOnline, allowedUriKinds, baseDirectory).ConfigureAwait(false);
+            var (content, encoding) = await ReadToByteArrayAsync(useCacheIfOnline, allowedUriKinds, baseDirectory).ConfigureAwait(false);
             encoding ??= Encoding.UTF8;
             return encoding.GetString(content);
         }

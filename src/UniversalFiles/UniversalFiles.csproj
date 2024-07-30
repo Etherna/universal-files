@@ -6,7 +6,7 @@
 		<RootNamespace>Etherna.UniversalFiles</RootNamespace>
     
 		<Authors>Etherna SA</Authors>
-		<Description>An experimental library providing support to universal files. An universal file is a file that can be located anywhere, and accessed transparently.</Description>
+		<Description>An experimental library providing support to universal files. An universal file is a file that can be located anywhere, and accessed transparently</Description>
 
     <LangVersion>12</LangVersion>
     <Nullable>enable</Nullable>

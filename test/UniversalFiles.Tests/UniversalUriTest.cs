@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -613,13 +612,12 @@ namespace Etherna.UniversalFiles
             }
         }
 
-        [SuppressMessage("Usage", "xUnit1012:Null should only be used for nullable parameters")]
         [Theory]
         [InlineData(null)]
         [InlineData("   ")]
-        public void EmptyUriThrowsException(string uri)
+        public void EmptyUriThrowsException(string? uri)
         {
-            Assert.Throws<ArgumentException>(() => new UniversalUri(uri));
+            Assert.Throws<ArgumentException>(() => new UniversalUri(uri!));
         }
 
         [Theory]

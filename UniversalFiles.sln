@@ -13,12 +13,18 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
-		LICENSE = LICENSE
 		README.md = README.md
-		UniversalFiles.sln.licenseheader = UniversalFiles.sln.licenseheader
+		CODE_OF_CONDUCT.md = CODE_OF_CONDUCT.md
+		CONTRIBUTING.md = CONTRIBUTING.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UniversalFiles.Tests", "test\UniversalFiles.Tests\UniversalFiles.Tests.csproj", "{3DA2FC19-A450-4A0F-BEA5-8FE92313D35B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{C48E21F6-31BA-4F52-8B44-8840E3C9E850}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\myget-unstable-deploy.yml = .github\workflows\myget-unstable-deploy.yml
+		.github\workflows\nuget-stable-deploy.yml = .github\workflows\nuget-stable-deploy.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +47,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{FEF25DC1-7C72-4A81-B148-0A6F093D6237} = {CC6B3F06-774E-471C-828C-B344064D285E}
 		{3DA2FC19-A450-4A0F-BEA5-8FE92313D35B} = {C5B37A36-A232-48C4-BE8F-BD676167D75D}
+		{C48E21F6-31BA-4F52-8B44-8840E3C9E850} = {06B15DCC-1EB3-49DE-B2FD-F2B8CD112B7A}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF46A9BA-D285-4C76-AEDF-F6920DD200B6}

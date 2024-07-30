@@ -27,7 +27,7 @@ namespace Etherna.UniversalFiles
         private (byte[], Encoding?)? onlineResourceCache;
 
         // Constructor.
-        public UniversalFile(
+        internal UniversalFile(
             UniversalUri fileUri,
             IHttpClientFactory httpClientFactory)
         {

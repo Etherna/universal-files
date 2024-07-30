@@ -27,6 +27,13 @@ namespace Etherna.UniversalFiles.Handlers
         Task<(long Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> GetByteSizeAsync(
             string absoluteUri,
             UniversalUriKind absoluteUriKind);
+
+        /// <summary>
+        /// Try to identify the uri kind, doesn't validate paths
+        /// </summary>
+        /// <param name="uri">The input uri</param>
+        /// <returns>Identified uri kind</returns>
+        UniversalUriKind GetUriKind(string uri);
         
         Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(
             string absoluteUri,
@@ -36,7 +43,16 @@ namespace Etherna.UniversalFiles.Handlers
             string absoluteUri,
             UniversalUriKind absoluteUriKind);
 
-        string? TryGetFileName(
-            UniversalUri fileUri);
+        Task<string?> TryGetFileNameAsync(
+            string originalUri);
+
+        (string AbsoluteUri, UniversalUriKind UriKind)? TryGetParentDirectoryAsAbsoluteUri(
+            string absoluteUri,
+            UniversalUriKind absoluteUriKind);
+
+        (string AbsoluteUri, UniversalUriKind UriKind) UriToAbsoluteUri(
+            string originalUri,
+            string? baseDirectory,
+            UniversalUriKind uriKind);
     }
 }

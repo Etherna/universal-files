@@ -14,9 +14,11 @@
 
 namespace Etherna.UniversalFiles
 {
-    public interface IUniversalFileProvider
+    public interface IUniversalUriProvider
     {
-        UniversalFile GetNewFile(
-            UniversalUri fileUri);
+        UniversalUri GetNewUri(
+            string uri,
+            UniversalUriKind allowedUriKinds = UniversalUriKind.All,
+            string? defaultBaseDirectory = null);
     }
 }

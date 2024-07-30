@@ -16,6 +16,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -78,6 +79,35 @@ namespace Etherna.UniversalFiles.Handlers
             }
         }
 
+        public UniversalUriKind GetUriKind(string uri)
+        {
+            ArgumentNullException.ThrowIfNull(uri, nameof(uri));
+
+            var uriKind = UniversalUriKind.None;
+
+            if (uri.Length > 0)
+            {
+                //test online absolute
+                if (Uri.TryCreate(uri, System.UriKind.Absolute, out var onlineAbsUriResult) &&
+                    (onlineAbsUriResult.Scheme == Uri.UriSchemeHttp || onlineAbsUriResult.Scheme == Uri.UriSchemeHttps))
+                    uriKind |= UniversalUriKind.OnlineAbsolute;
+
+                //test online relative
+                if (Uri.TryCreate(uri, System.UriKind.Relative, out var _))
+                    uriKind |= UniversalUriKind.OnlineRelative;
+
+                //test local absolute and relative
+                if ((uriKind & UniversalUriKind.OnlineAbsolute) == 0)
+                {
+                    uriKind |= Path.IsPathRooted(uri) ?
+                        UniversalUriKind.LocalAbsolute :
+                        UniversalUriKind.LocalRelative;
+                }
+            }
+
+            return uriKind;
+        }
+
         public async Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(
             string absoluteUri,
             UniversalUriKind absoluteUriKind)
@@ -114,14 +144,68 @@ namespace Etherna.UniversalFiles.Handlers
             }
         }
 
-        public string? TryGetFileName(UniversalUri fileUri)
+        public Task<string?> TryGetFileNameAsync(string originalUri)
         {
-            ArgumentNullException.ThrowIfNull(fileUri, nameof(fileUri));
+            ArgumentNullException.ThrowIfNull(originalUri, nameof(originalUri));
             
-            if (fileUri.OriginalUri.EndsWith('/') ||
-                fileUri.OriginalUri.EndsWith('\\'))
-                return null;
-            return fileUri.OriginalUri.Split('/', '\\').Last();
+            if (originalUri.EndsWith('/') ||
+                originalUri.EndsWith('\\'))
+                return Task.FromResult<string?>(null);
+            return Task.FromResult<string?>(originalUri.Split('/', '\\').Last());
+        }
+
+        public (string AbsoluteUri, UniversalUriKind UriKind)? TryGetParentDirectoryAsAbsoluteUri(
+            string absoluteUri,
+            UniversalUriKind absoluteUriKind)
+        {
+            switch (absoluteUriKind)
+            {
+                case UniversalUriKind.LocalAbsolute:
+                    var dirName = Path.GetDirectoryName(absoluteUri);
+                    return dirName is null ? null :
+                        (dirName, UniversalUriKind.LocalAbsolute);
+
+                case UniversalUriKind.OnlineAbsolute:
+                    var segments = new Uri(absoluteUri, System.UriKind.Absolute).Segments;
+                    return segments.Length == 1 ? null : //if it's already root, return null
+                        (absoluteUri[..^segments.Last().Length], UniversalUriKind.OnlineAbsolute);
+
+                default: throw new InvalidOperationException("Invalid absolute uri kind. It should be well defined and absolute");
+            }
+        }
+
+        public (string AbsoluteUri, UniversalUriKind UriKind) UriToAbsoluteUri(
+            string originalUri,
+            string? baseDirectory,
+            UniversalUriKind uriKind)
+        {
+            ArgumentNullException.ThrowIfNull(originalUri, nameof(originalUri));
+            
+            return uriKind switch
+            {
+                UniversalUriKind.LocalAbsolute =>
+                    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                    !Path.IsPathFullyQualified(originalUri) && //Ex: "/test"
+                    baseDirectory is not null && Path.IsPathFullyQualified(baseDirectory) ?
+                        (Path.GetFullPath(originalUri, baseDirectory), UniversalUriKind.LocalAbsolute) : //take unit from base directory
+                        (Path.GetFullPath(originalUri), UniversalUriKind.LocalAbsolute),
+
+                UniversalUriKind.LocalRelative =>
+                    (Path.GetFullPath(
+                            originalUri,
+                            baseDirectory is not null ?
+                                Path.GetFullPath(baseDirectory) : //GetFullPath is required when on windows baseDirectory is a root path without unit name. Ex: "/test"
+                                Directory.GetCurrentDirectory()),
+                        UniversalUriKind.LocalAbsolute),
+
+                UniversalUriKind.OnlineAbsolute => (new Uri(originalUri, System.UriKind.Absolute).ToString(), UniversalUriKind.OnlineAbsolute),
+
+                UniversalUriKind.OnlineRelative => (new Uri(
+                    new Uri(baseDirectory!, System.UriKind.Absolute),
+                    string.Join('/', originalUri.Split('/', '\\').Select(Uri.EscapeDataString))).ToString(), UniversalUriKind.OnlineAbsolute),
+
+                _ => throw new InvalidOperationException("Can't find a valid uri kind")
+            };
         }
 
         // Helpers.

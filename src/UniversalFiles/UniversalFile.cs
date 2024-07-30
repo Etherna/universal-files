@@ -12,7 +12,6 @@
 // You should have received a copy of the GNU Lesser General Public License along with UniversalFiles.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using Etherna.UniversalFiles.Handlers;
 using System;
 using System.IO;
 using System.Text;
@@ -23,18 +22,15 @@ namespace Etherna.UniversalFiles
     public class UniversalFile
     {
         // Fields.
-        private readonly IHandler handler;
         private (byte[], Encoding?)? onlineResourceCache;
 
         // Constructor.
         internal UniversalFile(
-            UniversalUri fileUri,
-            IHandler handler)
+            UniversalUri fileUri)
         {
             ArgumentNullException.ThrowIfNull(fileUri, nameof(fileUri));
             
             FileUri = fileUri;
-            this.handler = handler;
         }
 
         // Properties.
@@ -54,7 +50,7 @@ namespace Etherna.UniversalFiles
 
             // Get result from handler.
             var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            var (result, resultCache) = await handler.ExistsAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
+            var (result, resultCache) = await FileUri.Handler.ExistsAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
             
             // Update cache if required.
             if (absoluteUriKind == UniversalUriKind.OnlineAbsolute &&
@@ -76,7 +72,7 @@ namespace Etherna.UniversalFiles
 
             // Get result from handler.
             var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            var (result, resultCache) = await handler.GetByteSizeAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
+            var (result, resultCache) = await FileUri.Handler.GetByteSizeAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
             
             // Update cache if required.
             if (absoluteUriKind == UniversalUriKind.OnlineAbsolute &&
@@ -98,7 +94,7 @@ namespace Etherna.UniversalFiles
 
             // Get resource.
             var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            var result = await handler.ReadToByteArrayAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
+            var result = await FileUri.Handler.ReadToByteArrayAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
             
             // Update cache if required.
             if (absoluteUriKind == UniversalUriKind.OnlineAbsolute &&
@@ -114,7 +110,7 @@ namespace Etherna.UniversalFiles
         {
             // Get resource.
             var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            return handler.ReadToStreamAsync(absoluteUri, absoluteUriKind);
+            return FileUri.Handler.ReadToStreamAsync(absoluteUri, absoluteUriKind);
         }
 
         public async Task<string> ReadToStringAsync(
@@ -130,6 +126,7 @@ namespace Etherna.UniversalFiles
             return encoding.GetString(content);
         }
 
-        public string? TryGetFileName() => handler.TryGetFileName(FileUri);
+        public Task<string?> TryGetFileNameAsync() =>
+            FileUri.TryGetFileNameAsync();
     }
 }

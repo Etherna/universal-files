@@ -17,14 +17,18 @@ using System.Net.Http;
 
 namespace Etherna.UniversalFiles
 {
-    public class UniversalFileProvider(
+    public class UniversalUriProvider(
         IHttpClientFactory httpClientFactory)
-        : IUniversalFileProvider
+        : IUniversalUriProvider
     {
         // Fields.
         private readonly BasicHandler basicHandler = new(httpClientFactory);
         
         // Methods.
-        public UniversalFile GetNewFile(UniversalUri fileUri) => new(fileUri, basicHandler);
+        public UniversalUri GetNewUri(
+            string uri,
+            UniversalUriKind allowedUriKinds = UniversalUriKind.All,
+            string? defaultBaseDirectory = null) =>
+            new(uri, basicHandler, allowedUriKinds, defaultBaseDirectory);
     }
 }

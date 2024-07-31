@@ -608,11 +608,14 @@ namespace Etherna.UniversalFiles
         }
         
         [Theory]
-        [InlineData("https://example.com/", UniversalUriKind.None)]
-        [InlineData("https://example.com/", UniversalUriKind.Local)]
+        [InlineData(OnlineAbsUri, UniversalUriKind.None)]
+        [InlineData(OnlineAbsUri, UniversalUriKind.Local)]
         public void TooRestrictiveUriKindThrowsException(string uri, UniversalUriKind allowedUriKinds)
         {
-            Assert.Throws<ArgumentException>(() => new UniversalUri(uri, allowedUriKinds));
+            var handlerMock = new Mock<IHandler>();
+            handlerMock.Setup(h => h.GetUriKind(OnlineAbsUri))
+                .Returns(() => UniversalUriKind.OnlineAbsolute);
+            Assert.Throws<ArgumentException>(() => new UniversalUri(uri, handlerMock.Object, allowedUriKinds));
         }
         
         [Theory, MemberData(nameof(ToAbsoluteUriTests))]

@@ -88,12 +88,12 @@ namespace Etherna.UniversalFiles.Handlers
             if (uri.Length > 0)
             {
                 //test online absolute
-                if (Uri.TryCreate(uri, System.UriKind.Absolute, out var onlineAbsUriResult) &&
+                if (Uri.TryCreate(uri, UriKind.Absolute, out var onlineAbsUriResult) &&
                     (onlineAbsUriResult.Scheme == Uri.UriSchemeHttp || onlineAbsUriResult.Scheme == Uri.UriSchemeHttps))
                     uriKind |= UniversalUriKind.OnlineAbsolute;
 
                 //test online relative
-                if (Uri.TryCreate(uri, System.UriKind.Relative, out var _))
+                if (Uri.TryCreate(uri, UriKind.Relative, out var _))
                     uriKind |= UniversalUriKind.OnlineRelative;
 
                 //test local absolute and relative
@@ -181,6 +181,13 @@ namespace Etherna.UniversalFiles.Handlers
         {
             ArgumentNullException.ThrowIfNull(originalUri, nameof(originalUri));
             
+            // Verify base directory is absolute.
+            if ((uriKind & UniversalUriKind.Relative) != 0 &&
+                baseDirectory != null &&
+                (GetUriKind(baseDirectory) & UniversalUriKind.Absolute) == 0)
+                throw new InvalidOperationException("If uri kind can be relative and base directory is present, it must be absolute");
+            
+            // Resolve absolute url.
             return uriKind switch
             {
                 UniversalUriKind.LocalAbsolute =>

@@ -79,6 +79,10 @@ namespace Etherna.UniversalFiles
             }
 
             // Checks.
+            //none allowed uri kinds.
+            if (actualAllowedUriKinds == UniversalUriKind.None)
+                throw new InvalidOperationException("Can't identify a valid uri kind");
+            
             //local and online ambiguity
             if ((actualAllowedUriKinds & UniversalUriKind.Local) != 0 &&
                 (actualAllowedUriKinds & UniversalUriKind.Online) != 0)

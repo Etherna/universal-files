@@ -29,6 +29,14 @@ namespace Etherna.UniversalFiles.Handlers
         private static BasicHandler handler = new(new Mock<IHttpClientFactory>().Object);
         
         // Classes.
+        public class GetUriKindTestElement(
+            string uri,
+            UniversalUriKind expectedUriKind)
+        {
+            public string Uri { get; } = uri;
+            public UniversalUriKind ExpectedUriKind { get; } = expectedUriKind;
+        }
+        
         public class UriToAbsoluteUriTestElement(
             string originalUri,
             string? baseDirectory,
@@ -44,6 +52,74 @@ namespace Etherna.UniversalFiles.Handlers
         }
 
         // Data.
+        public static IEnumerable<object[]> GetUriKindTests
+        {
+            get
+            {
+                var tests = new List<GetUriKindTestElement>
+                {
+                    new("",
+                        UniversalUriKind.None),
+        
+                    new("test.txt",
+                        UniversalUriKind.Relative),
+        
+                    new("dir/test.txt",
+                        UniversalUriKind.Relative),
+        
+                    new("dir\\test.txt",
+                        UniversalUriKind.Relative),
+        
+                    new("/test.txt",
+                        UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative),
+        
+                    new("\\test.txt",
+                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
+                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
+                            UniversalUriKind.Relative),
+        
+                    new("C:/dir/",
+                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
+                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
+                            UniversalUriKind.Relative),
+        
+                    new("C:\\dir\\",
+                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
+                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
+                            UniversalUriKind.Relative),
+        
+                    new("C:\\dir/file.txt",
+                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
+                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
+                            UniversalUriKind.Relative),
+        
+                    new("/dir/",
+                        UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative),
+        
+                    new("\\dir\\",
+                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
+                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
+                            UniversalUriKind.Relative),
+        
+                    new("\\dir/file.txt",
+                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
+                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
+                            UniversalUriKind.Relative),
+        
+                    new("https://example.com",
+                        UniversalUriKind.OnlineAbsolute),
+        
+                    new("https://example.com/dir/",
+                        UniversalUriKind.OnlineAbsolute),
+        
+                    new("http://example.com/dir/file.txt",
+                        UniversalUriKind.OnlineAbsolute),
+                };
+        
+                return tests.Select(t => new object[] { t });
+            }
+        }
+        
         public static IEnumerable<object[]> UriToAbsoluteUriTests
         {
             get
@@ -189,6 +265,14 @@ namespace Etherna.UniversalFiles.Handlers
         }
         
         // Tests.
+        [Theory, MemberData(nameof(GetUriKindTests))]
+        public void GetUriKind(GetUriKindTestElement test)
+        {
+            var result = handler.GetUriKind(test.Uri);
+        
+            Assert.Equal(test.ExpectedUriKind, result);
+        }
+        
         [Theory, MemberData(nameof(UriToAbsoluteUriTests))]
         public void UriToAbsoluteUri(UriToAbsoluteUriTestElement test)
         {

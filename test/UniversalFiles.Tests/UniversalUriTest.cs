@@ -158,20 +158,6 @@ namespace Etherna.UniversalFiles
             public Type? ExpectedExceptionType { get; }
         }
 
-        public class GetUriKindTestElement
-        {
-            public GetUriKindTestElement(
-                string uri,
-                UniversalUriKind expectedUriKind)
-            {
-                Uri = uri;
-                ExpectedUriKind = expectedUriKind;
-            }
-
-            public string Uri { get; }
-            public UniversalUriKind ExpectedUriKind { get; }
-        }
-
         // Data.
         public static IEnumerable<object[]> ToAbsoluteUriTests
         {
@@ -587,89 +573,6 @@ namespace Etherna.UniversalFiles
             }
         }
         
-        public static IEnumerable<object[]> GetUriKindTests
-        {
-            get
-            {
-                var tests = new List<GetUriKindTestElement>
-                {
-                    new GetUriKindTestElement(
-                        "",
-                        UniversalUriKind.None),
-        
-                    new GetUriKindTestElement(
-                        "test.txt",
-                        UniversalUriKind.Relative),
-        
-                    new GetUriKindTestElement(
-                        "dir/test.txt",
-                        UniversalUriKind.Relative),
-        
-                    new GetUriKindTestElement(
-                        "dir\\test.txt",
-                        UniversalUriKind.Relative),
-        
-                    new GetUriKindTestElement(
-                        "/test.txt",
-                        UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative),
-        
-                    new GetUriKindTestElement(
-                        "\\test.txt",
-                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
-                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
-                            UniversalUriKind.Relative),
-        
-                    new GetUriKindTestElement(
-                        "C:/dir/",
-                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
-                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
-                            UniversalUriKind.Relative),
-        
-                    new GetUriKindTestElement(
-                        "C:\\dir\\",
-                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
-                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
-                            UniversalUriKind.Relative),
-        
-                    new GetUriKindTestElement(
-                        "C:\\dir/file.txt",
-                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
-                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
-                            UniversalUriKind.Relative),
-        
-                    new GetUriKindTestElement(
-                        "/dir/",
-                        UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative),
-        
-                    new GetUriKindTestElement(
-                        "\\dir\\",
-                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
-                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
-                            UniversalUriKind.Relative),
-        
-                    new GetUriKindTestElement(
-                        "\\dir/file.txt",
-                        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
-                            UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative :
-                            UniversalUriKind.Relative),
-        
-                    new GetUriKindTestElement(
-                        "https://example.com",
-                        UniversalUriKind.OnlineAbsolute),
-        
-                    new GetUriKindTestElement(
-                        "https://example.com/dir/",
-                        UniversalUriKind.OnlineAbsolute),
-        
-                    new GetUriKindTestElement(
-                        "http://example.com/dir/file.txt",
-                        UniversalUriKind.OnlineAbsolute),
-                };
-        
-                return tests.Select(t => new object[] { t });
-            }
-        }
-        
         // Tests.
         [Theory]
         [InlineData("test", UniversalUriKind.All, "test", UniversalUriKind.Relative, null)]
@@ -782,14 +685,6 @@ namespace Etherna.UniversalFiles
                 Assert.Throws(test.ExpectedExceptionType!,
                     () => test.UniversalUri.TryGetParentDirectoryAsAbsoluteUri());
             }
-        }
-        
-        [Theory, MemberData(nameof(GetUriKindTests))]
-        public void GetUriKind(GetUriKindTestElement test)
-        {
-            var result = UniversalUri.GetUriKind(test.Uri);
-        
-            Assert.Equal(test.ExpectedUriKind, result);
         }
     }
 }

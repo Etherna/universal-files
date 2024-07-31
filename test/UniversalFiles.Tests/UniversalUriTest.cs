@@ -16,9 +16,7 @@ using Etherna.UniversalFiles.Handlers;
 using Moq;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Xunit;
 
 namespace Etherna.UniversalFiles
@@ -109,30 +107,37 @@ namespace Etherna.UniversalFiles
 
         public class ToAbsoluteUriUsesAllowedUriKindsTestElement
         {
-            public ToAbsoluteUriUsesAllowedUriKindsTestElement(
-                UniversalUri universalUri,
-                UniversalUriKind argAllowedUriKinds,
-                (string, UniversalUriKind) expectedResult)
-            {
-                UniversalUri = universalUri;
-                ArgAllowedUriKinds = argAllowedUriKinds;
-                ExpectedResult = expectedResult;
-            }
+            // Fields.
+            private readonly Action<Mock<IHandler>>? assertHandlerMock;
 
+            // Constructor.
             public ToAbsoluteUriUsesAllowedUriKindsTestElement(
-                UniversalUri universalUri,
+                string uri,
+                UniversalUriKind allowedUriKinds,
                 UniversalUriKind argAllowedUriKinds,
-                Type expectedExceptionType)
+                Action<Mock<IHandler>>? assertHandlerMock = null,
+                Type? expectedExceptionType = null)
             {
-                UniversalUri = universalUri;
+                // Setup handler mock.
+                HandlerMock = new Mock<IHandler>();
+                HandlerMock.Setup(h => h.GetUriKind(RelativeUri))
+                    .Returns(() => UniversalUriKind.Relative);
+                
+                // Set properties.
+                this.assertHandlerMock = assertHandlerMock;
+                UniversalUri = new UniversalUri(uri, HandlerMock.Object, allowedUriKinds);
                 ArgAllowedUriKinds = argAllowedUriKinds;
                 ExpectedExceptionType = expectedExceptionType;
             }
 
             public UniversalUri UniversalUri { get; }
             public UniversalUriKind ArgAllowedUriKinds { get; }
-            public (string, UniversalUriKind)? ExpectedResult { get; }
             public Type? ExpectedExceptionType { get; }
+            public Mock<IHandler> HandlerMock { get; }
+            
+            // Methods.
+            public void Assert() =>
+                assertHandlerMock?.Invoke(HandlerMock);
         }
 
         // Data.
@@ -474,28 +479,30 @@ namespace Etherna.UniversalFiles
                 var tests = new List<ToAbsoluteUriUsesAllowedUriKindsTestElement>
                 {
                     //all constructor, all method.
-                    new ToAbsoluteUriUsesAllowedUriKindsTestElement(
-                        new UniversalUri("test"), //UriKind == Urikinds.Relative
+                    new(RelativeUri,
+                        UniversalUriKind.Relative,
                         UniversalUriKind.All,
-                        typeof(InvalidOperationException)), //throws exception because is ambiguous
+                        expectedExceptionType: typeof(InvalidOperationException)), //throws exception because is ambiguous
         
                     //limit constructor, all method
-                    new ToAbsoluteUriUsesAllowedUriKindsTestElement(
-                        new UniversalUri("test", UniversalUriKind.Local), //UriKind == Urikinds.LocalRelative
+                    new(RelativeUri,
+                        UniversalUriKind.Local,
                         UniversalUriKind.All,
-                        (Path.GetFullPath("test"), UniversalUriKind.LocalAbsolute)),
+                        assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
+                            RelativeUri, null, UniversalUriKind.LocalRelative), Times.Once)),
         
                     //all constructor, limit method
-                    new ToAbsoluteUriUsesAllowedUriKindsTestElement(
-                        new UniversalUri("test"), //UriKind == Urikinds.Relative
+                    new(RelativeUri,
+                        UniversalUriKind.Relative,
                         UniversalUriKind.Local,
-                        (Path.GetFullPath("test"), UniversalUriKind.LocalAbsolute)),
+                        assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
+                            RelativeUri, null, UniversalUriKind.LocalRelative), Times.Once)),
                     
                     //limit constructor, limit method
-                    new ToAbsoluteUriUsesAllowedUriKindsTestElement(
-                        new UniversalUri("test", UniversalUriKind.Local), //UriKind == Urikinds.LocalRelative
+                    new(RelativeUri,
+                        UniversalUriKind.Local,
                         UniversalUriKind.Online,
-                        typeof(InvalidOperationException)), //throws exception because can't find a valid uri type
+                        expectedExceptionType: typeof(InvalidOperationException)), //throws exception because can't find a valid uri kind
                 };
         
                 return tests.Select(t => new object[] { t });
@@ -596,12 +603,12 @@ namespace Etherna.UniversalFiles
         [Theory, MemberData(nameof(ToAbsoluteUriUsesAllowedUriKindsTests))]
         public void ToAbsoluteUriUsesAllowedUriKinds(ToAbsoluteUriUsesAllowedUriKindsTestElement test)
         {
-            if (test.ExpectedResult is not null)
+            if (test.ExpectedExceptionType is null)
             {
-                var result = test.UniversalUri.ToAbsoluteUri(
+                test.UniversalUri.ToAbsoluteUri(
                     test.ArgAllowedUriKinds);
-        
-                Assert.Equal(test.ExpectedResult, result);
+
+                test.Assert();
             }
             else
             {

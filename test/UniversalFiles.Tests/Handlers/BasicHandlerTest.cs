@@ -36,6 +36,16 @@ namespace Etherna.UniversalFiles.Handlers
             public string Uri { get; } = uri;
             public UniversalUriKind ExpectedUriKind { get; } = expectedUriKind;
         }
+
+        public class TryGetParentDirectoryAsAbsoluteUriTestElement(
+            string absoluteUri,
+            UniversalUriKind absoluteUriKind,
+            (string, UniversalUriKind)? expectedResult)
+        {
+            public string AbsoluteUri { get; } = absoluteUri;
+            public UniversalUriKind AbsoluteUriKind { get; } = absoluteUriKind;
+            public (string, UniversalUriKind)? ExpectedResult { get; } = expectedResult;
+        }
         
         public class UriToAbsoluteUriTestElement(
             string originalUri,
@@ -114,6 +124,52 @@ namespace Etherna.UniversalFiles.Handlers
         
                     new("http://example.com/dir/file.txt",
                         UniversalUriKind.OnlineAbsolute),
+                };
+        
+                return tests.Select(t => new object[] { t });
+            }
+        }
+        
+        public static IEnumerable<object[]> TryGetParentDirectoryAsAbsoluteUriTests
+        {
+            get
+            {
+                var tests = new List<TryGetParentDirectoryAsAbsoluteUriTestElement>
+                {
+                    //local without parent
+                    new("/",
+                        UniversalUriKind.LocalAbsolute,
+                        ((string, UniversalUriKind)?)null),
+        
+                    //local with parent
+                    new("/parent/test",
+                        UniversalUriKind.LocalAbsolute,
+                        (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
+                            Path.GetFullPath("/parent") :
+                            "/parent",
+                            UniversalUriKind.LocalAbsolute)),
+        
+                    //online without parent
+                    new("https://example.com",
+                        UniversalUriKind.OnlineAbsolute,
+                        ((string, UniversalUriKind)?)null),
+        
+                    new("https://example.com/",
+                        UniversalUriKind.OnlineAbsolute,
+                        ((string, UniversalUriKind)?)null),
+        
+                    //online with parent
+                    new("https://example.com/test",
+                        UniversalUriKind.OnlineAbsolute,
+                        ("https://example.com/", UniversalUriKind.OnlineAbsolute)),
+        
+                    new("https://example.com/test/",
+                        UniversalUriKind.OnlineAbsolute,
+                        ("https://example.com/", UniversalUriKind.OnlineAbsolute)),
+        
+                    new("https://example.com/parent/test",
+                        UniversalUriKind.OnlineAbsolute,
+                        ("https://example.com/parent/", UniversalUriKind.OnlineAbsolute)),
                 };
         
                 return tests.Select(t => new object[] { t });
@@ -271,6 +327,14 @@ namespace Etherna.UniversalFiles.Handlers
             var result = handler.GetUriKind(test.Uri);
         
             Assert.Equal(test.ExpectedUriKind, result);
+        }
+        
+        [Theory, MemberData(nameof(TryGetParentDirectoryAsAbsoluteUriTests))]
+        public void TryGetParentDirectoryAsAbsoluteUri(TryGetParentDirectoryAsAbsoluteUriTestElement test)
+        {
+            var result = handler.TryGetParentDirectoryAsAbsoluteUri(test.AbsoluteUri, test.AbsoluteUriKind);
+        
+            Assert.Equal(test.ExpectedResult, result);
         }
         
         [Theory, MemberData(nameof(UriToAbsoluteUriTests))]

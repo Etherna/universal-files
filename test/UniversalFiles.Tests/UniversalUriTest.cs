@@ -135,29 +135,6 @@ namespace Etherna.UniversalFiles
             public Type? ExpectedExceptionType { get; }
         }
 
-        public class TryGetParentDirectoryAsAbsoluteUriTestElement
-        {
-            public TryGetParentDirectoryAsAbsoluteUriTestElement(
-                UniversalUri universalUri,
-                (string, UniversalUriKind)? expectedResult)
-            {
-                UniversalUri = universalUri;
-                ExpectedResult = expectedResult;
-            }
-
-            public TryGetParentDirectoryAsAbsoluteUriTestElement(
-                UniversalUri universalUri,
-                Type expectedExceptionType)
-            {
-                UniversalUri = universalUri;
-                ExpectedExceptionType = expectedExceptionType;
-            }
-
-            public UniversalUri UniversalUri { get; }
-            public (string, UniversalUriKind)? ExpectedResult { get; }
-            public Type? ExpectedExceptionType { get; }
-        }
-
         // Data.
         public static IEnumerable<object[]> ToAbsoluteUriTests
         {
@@ -525,54 +502,6 @@ namespace Etherna.UniversalFiles
             }
         }
         
-        public static IEnumerable<object[]> TryGetParentDirectoryAsAbsoluteUriTests
-        {
-            get
-            {
-                var tests = new List<TryGetParentDirectoryAsAbsoluteUriTestElement>
-                {
-                    //local without parent
-                    new TryGetParentDirectoryAsAbsoluteUriTestElement(
-                        new UniversalUri("/", UniversalUriKind.Local),
-                        ((string, UniversalUriKind)?)null),
-        
-                    //local with parent
-                    new TryGetParentDirectoryAsAbsoluteUriTestElement(
-                        new UniversalUri("parent/test", UniversalUriKind.Local),
-                        (Path.GetFullPath("parent"), UniversalUriKind.LocalAbsolute)),
-        
-                    //online without parent
-                    new TryGetParentDirectoryAsAbsoluteUriTestElement(
-                        new UniversalUri("https://example.com"),
-                        ((string, UniversalUriKind)?)null),
-        
-                    new TryGetParentDirectoryAsAbsoluteUriTestElement(
-                        new UniversalUri("https://example.com/"),
-                        ((string, UniversalUriKind)?)null),
-        
-                    //online with parent
-                    new TryGetParentDirectoryAsAbsoluteUriTestElement(
-                        new UniversalUri("https://example.com/test"),
-                        ("https://example.com/", UniversalUriKind.OnlineAbsolute)),
-        
-                    new TryGetParentDirectoryAsAbsoluteUriTestElement(
-                        new UniversalUri("https://example.com/test/"),
-                        ("https://example.com/", UniversalUriKind.OnlineAbsolute)),
-        
-                    new TryGetParentDirectoryAsAbsoluteUriTestElement(
-                        new UniversalUri("https://example.com/parent/test"),
-                        ("https://example.com/parent/", UniversalUriKind.OnlineAbsolute)),
-        
-                    //exception because of invalid absolute uri
-                    new TryGetParentDirectoryAsAbsoluteUriTestElement(
-                        new UniversalUri("test"),
-                        typeof(InvalidOperationException)), //throws exception because can't resolve absolute uri
-                };
-        
-                return tests.Select(t => new object[] { t });
-            }
-        }
-        
         // Tests.
         [Theory]
         [InlineData(RelativeUri, UniversalUriKind.All, RelativeUri, UniversalUriKind.Relative, null)]
@@ -631,7 +560,7 @@ namespace Etherna.UniversalFiles
         {
             if (test.ExpectedExceptionType is null)
             {
-                var result = test.UniversalUri.ToAbsoluteUri(
+                test.UniversalUri.ToAbsoluteUri(
                     test.AllowedUriKinds,
                     test.BaseDirectory);
 
@@ -679,22 +608,6 @@ namespace Etherna.UniversalFiles
                 Assert.Throws(test.ExpectedExceptionType!,
                     () => test.UniversalUri.ToAbsoluteUri(
                         test.ArgAllowedUriKinds));
-            }
-        }
-        
-        [Theory, MemberData(nameof(TryGetParentDirectoryAsAbsoluteUriTests))]
-        public void TryGetParentDirectoryAsAbsoluteUri(TryGetParentDirectoryAsAbsoluteUriTestElement test)
-        {
-            if (test.ExpectedExceptionType is null)
-            {
-                var result = test.UniversalUri.TryGetParentDirectoryAsAbsoluteUri();
-        
-                Assert.Equal(test.ExpectedResult, result);
-            }
-            else
-            {
-                Assert.Throws(test.ExpectedExceptionType!,
-                    () => test.UniversalUri.TryGetParentDirectoryAsAbsoluteUri());
             }
         }
     }

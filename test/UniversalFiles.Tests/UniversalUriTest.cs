@@ -28,9 +28,9 @@ namespace Etherna.UniversalFiles
         // Consts.
         private const string LocalAbsOrOnlineRelUri = "LocalAbsOrOnlineRelUri";
         private const string LocalAbsUri = "LocalAbsUri";
-        private const string LocalRelOrOnlineRelUri = "LocalRelOrOnlineRelUri";
         private const string OnlineAbsUri = "OnlineAbsUri";
         private const string OnlineAbsUri2 = "OnlineAbsUri2";
+        private const string RelativeUri = "RelativeUri";
         
         // Classes.
         public class ToAbsoluteUriTestElement
@@ -52,12 +52,12 @@ namespace Etherna.UniversalFiles
                     .Returns(() => UniversalUriKind.LocalAbsolute | UniversalUriKind.OnlineRelative);
                 HandlerMock.Setup(h => h.GetUriKind(LocalAbsUri))
                     .Returns(() => UniversalUriKind.LocalAbsolute);
-                HandlerMock.Setup(h => h.GetUriKind(LocalRelOrOnlineRelUri))
-                    .Returns(() => UniversalUriKind.LocalRelative | UniversalUriKind.OnlineRelative);
                 HandlerMock.Setup(h => h.GetUriKind(OnlineAbsUri))
                     .Returns(() => UniversalUriKind.OnlineAbsolute);
                 HandlerMock.Setup(h => h.GetUriKind(OnlineAbsUri2))
                     .Returns(() => UniversalUriKind.OnlineAbsolute);
+                HandlerMock.Setup(h => h.GetUriKind(RelativeUri))
+                    .Returns(() => UniversalUriKind.Relative);
                 
                 // Set properties.
                 this.assertHandlerMock = assertHandlerMock;
@@ -248,117 +248,117 @@ namespace Etherna.UniversalFiles
                     //local absolute (or online relative), with relative base directory. Throws exception because is ambiguous and base directory is not absolute
                     new(LocalAbsOrOnlineRelUri,
                         UniversalUriKind.All,
-                        LocalRelOrOnlineRelUri,
+                        RelativeUri,
                         expectedExceptionType: typeof(InvalidOperationException)),
                     
                     //local absolute (or online relative), with relative base directory. Throws exception because is ambiguous and base directory is not absolute
                     new(LocalAbsOrOnlineRelUri,
                         UniversalUriKind.Local,
-                        LocalRelOrOnlineRelUri,
+                        RelativeUri,
                         assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
-                            LocalAbsOrOnlineRelUri, LocalRelOrOnlineRelUri, UniversalUriKind.LocalAbsolute), Times.Once)),
+                            LocalAbsOrOnlineRelUri, RelativeUri, UniversalUriKind.LocalAbsolute), Times.Once)),
                     
                     //local absolute (or online relative), with relative base directory. Throws exception because is ambiguous and base directory is not absolute
                     new(LocalAbsOrOnlineRelUri,
                         UniversalUriKind.Online,
-                        LocalRelOrOnlineRelUri,
+                        RelativeUri,
                         expectedExceptionType: typeof(InvalidOperationException)),
                     
                     //local relative (or online relative) without restrictions. Throws exception because is ambiguous
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.All,
                         null,
                         expectedExceptionType: typeof(InvalidOperationException)),
                     
                     //local relative (or online relative), with local restriction
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.Local,
                         null,
                         assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
-                            LocalRelOrOnlineRelUri, null, UniversalUriKind.LocalRelative), Times.Once)),
+                            RelativeUri, null, UniversalUriKind.LocalRelative), Times.Once)),
                     
                     //local relative (or online relative), with online restriction. Throws exception because base directory is null
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.Online,
                         null,
                         expectedExceptionType: typeof(InvalidOperationException)),
                     
                     //local relative (or online relative) with local base directory
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.All,
                         LocalAbsOrOnlineRelUri,
                         assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
-                            LocalRelOrOnlineRelUri, LocalAbsOrOnlineRelUri, UniversalUriKind.LocalRelative), Times.Once)),
+                            RelativeUri, LocalAbsOrOnlineRelUri, UniversalUriKind.LocalRelative), Times.Once)),
                     
                     //local relative (or online relative), with local base directory, with local restriction
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.Local,
                         LocalAbsOrOnlineRelUri,
                         assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
-                            LocalRelOrOnlineRelUri, LocalAbsOrOnlineRelUri, UniversalUriKind.LocalRelative), Times.Once)),
+                            RelativeUri, LocalAbsOrOnlineRelUri, UniversalUriKind.LocalRelative), Times.Once)),
                     
                     //local relative (or online relative), with local base directory, with online restriction. Throws exception because can't identify valid uri kind
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.Online,
                         LocalAbsOrOnlineRelUri,
                         expectedExceptionType: typeof(InvalidOperationException)),
                     
                     //local relative (or online relative), with online base directory
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.All,
                         OnlineAbsUri,
                         assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
-                            LocalRelOrOnlineRelUri, OnlineAbsUri, UniversalUriKind.OnlineRelative), Times.Once)),
+                            RelativeUri, OnlineAbsUri, UniversalUriKind.OnlineRelative), Times.Once)),
                     
                     //local relative (or online relative), with online base directory, with local restriction. Throws exception because can't identify valid uri kind
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.Local,
                         OnlineAbsUri,
                         expectedExceptionType: typeof(InvalidOperationException)),
                     
                     //local relative (or online relative), with online base directory, with online restriction
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.Online,
                         OnlineAbsUri,
                         assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
-                            LocalRelOrOnlineRelUri, OnlineAbsUri, UniversalUriKind.OnlineRelative), Times.Once)),
+                            RelativeUri, OnlineAbsUri, UniversalUriKind.OnlineRelative), Times.Once)),
                     
                     //local relative (or online relative), with local base directory
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.All,
                         LocalAbsUri,
                         assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
-                            LocalRelOrOnlineRelUri, LocalAbsUri, UniversalUriKind.LocalRelative), Times.Once)),
+                            RelativeUri, LocalAbsUri, UniversalUriKind.LocalRelative), Times.Once)),
                     
                     //local relative (or online relative), with local base directory, with local restriction
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.Local,
                         LocalAbsUri,
                         assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
-                            LocalRelOrOnlineRelUri, LocalAbsUri, UniversalUriKind.LocalRelative), Times.Once)),
+                            RelativeUri, LocalAbsUri, UniversalUriKind.LocalRelative), Times.Once)),
                     
                     //local relative (or online relative), with local base directory, with online restriction. Throws exception because can't identify valid uri kind
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.Online,
                         LocalAbsUri,
                         expectedExceptionType: typeof(InvalidOperationException)),
                     
                     //local relative (or online relative), with relative base directory. Throws exception because is ambiguous and base directory is not absolute
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.All,
-                        LocalRelOrOnlineRelUri,
+                        RelativeUri,
                         expectedExceptionType: typeof(InvalidOperationException)),
                     
                     //local relative (or online relative), with relative base directory, with local restriction. Throws exception because is ambiguous and base directory is not absolute
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.Local,
-                        LocalRelOrOnlineRelUri,
+                        RelativeUri,
                         expectedExceptionType: typeof(InvalidOperationException)),
                     
                     //local relative (or online relative), with relative base directory, with online restriction. Throws exception because is ambiguous and base directory is not absolute
-                    new(LocalRelOrOnlineRelUri,
+                    new(RelativeUri,
                         UniversalUriKind.Online,
-                        LocalRelOrOnlineRelUri,
+                        RelativeUri,
                         expectedExceptionType: typeof(InvalidOperationException)),
                     
                     //local absolute, with local base directory, without restrictions
@@ -431,22 +431,22 @@ namespace Etherna.UniversalFiles
                     //online absolute, with relative base directory
                     new(OnlineAbsUri,
                         UniversalUriKind.All,
-                        LocalRelOrOnlineRelUri,
+                        RelativeUri,
                         assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
-                            OnlineAbsUri, LocalRelOrOnlineRelUri, UniversalUriKind.OnlineAbsolute), Times.Once)),
+                            OnlineAbsUri, RelativeUri, UniversalUriKind.OnlineAbsolute), Times.Once)),
                     
                     //online absolute, with relative base directory, with local restriction. Throws exception because can't find valid uri kind
                     new(OnlineAbsUri,
                         UniversalUriKind.Local,
-                        LocalRelOrOnlineRelUri,
+                        RelativeUri,
                         expectedExceptionType: typeof(InvalidOperationException)),
                     
                     //online absolute, with relative base directory, with online restriction
                     new(OnlineAbsUri,
                         UniversalUriKind.Online,
-                        LocalRelOrOnlineRelUri,
+                        RelativeUri,
                         assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
-                            OnlineAbsUri, LocalRelOrOnlineRelUri, UniversalUriKind.OnlineAbsolute), Times.Once)),
+                            OnlineAbsUri, RelativeUri, UniversalUriKind.OnlineAbsolute), Times.Once)),
                 };
 
                 return tests.Select(t => new object[] { t });
@@ -575,10 +575,10 @@ namespace Etherna.UniversalFiles
         
         // Tests.
         [Theory]
-        [InlineData("test", UniversalUriKind.All, "test", UniversalUriKind.Relative, null)]
-        [InlineData("test", UniversalUriKind.Local, "test", UniversalUriKind.LocalRelative, null)]
-        [InlineData("https://example.com/", UniversalUriKind.All, "https://example.com/", UniversalUriKind.OnlineAbsolute, null)]
-        [InlineData("test", UniversalUriKind.Absolute, null, null, typeof(ArgumentException))] // throws because "test" is relative
+        [InlineData(RelativeUri, UniversalUriKind.All, RelativeUri, UniversalUriKind.Relative, null)]
+        [InlineData(RelativeUri, UniversalUriKind.Local, RelativeUri, UniversalUriKind.LocalRelative, null)]
+        [InlineData(OnlineAbsUri, UniversalUriKind.All, OnlineAbsUri, UniversalUriKind.OnlineAbsolute, null)]
+        [InlineData(RelativeUri, UniversalUriKind.Absolute, null, null, typeof(ArgumentException))] // throws because uri is relative
         public void ConstructorEvaluateProperties(
             string uri,
             UniversalUriKind allowedUriKinds,
@@ -586,16 +586,23 @@ namespace Etherna.UniversalFiles
             UniversalUriKind? expectedUriKind,
             Type? expectedExceptionType)
         {
+            // Setup handler mock.
+            var handlerMock = new Mock<IHandler>();
+            handlerMock.Setup(h => h.GetUriKind(OnlineAbsUri))
+                .Returns(() => UniversalUriKind.OnlineAbsolute);
+            handlerMock.Setup(h => h.GetUriKind(RelativeUri))
+                .Returns(() => UniversalUriKind.Relative);
+            
             if (expectedExceptionType is null)
             {
-                var universalUri = new UniversalUri(uri, allowedUriKinds);
+                var universalUri = new UniversalUri(uri, handlerMock.Object, allowedUriKinds);
         
                 Assert.Equal(expectedOriginalUri, universalUri.OriginalUri);
                 Assert.Equal(expectedUriKind, universalUri.UriKind);
             }
             else
             {
-                Assert.Throws(expectedExceptionType, () => new UniversalUri(uri, allowedUriKinds));
+                Assert.Throws(expectedExceptionType, () => new UniversalUri(uri, handlerMock.Object, allowedUriKinds));
             }
         }
         
@@ -604,7 +611,8 @@ namespace Etherna.UniversalFiles
         [InlineData("   ")]
         public void EmptyUriThrowsException(string? uri)
         {
-            Assert.Throws<ArgumentException>(() => new UniversalUri(uri!));
+            var handlerMock = new Mock<IHandler>();
+            Assert.Throws<ArgumentException>(() => new UniversalUri(uri!, handlerMock.Object));
         }
         
         [Theory]

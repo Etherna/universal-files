@@ -166,7 +166,7 @@ namespace Etherna.UniversalFiles.Handlers
                         (dirName, UniversalUriKind.LocalAbsolute);
 
                 case UniversalUriKind.OnlineAbsolute:
-                    var segments = new Uri(absoluteUri, System.UriKind.Absolute).Segments;
+                    var segments = new Uri(absoluteUri, UriKind.Absolute).Segments;
                     return segments.Length == 1 ? null : //if it's already root, return null
                         (absoluteUri[..^segments.Last().Length], UniversalUriKind.OnlineAbsolute);
 

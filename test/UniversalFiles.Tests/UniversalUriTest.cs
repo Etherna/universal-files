@@ -79,30 +79,42 @@ namespace Etherna.UniversalFiles
 
         public class ToAbsoluteUriUsesBaseDirectoryTestElement
         {
-            public ToAbsoluteUriUsesBaseDirectoryTestElement(
-                UniversalUri universalUri,
-                string? argBaseDirectory,
-                (string, UniversalUriKind) expectedResult)
-            {
-                UniversalUri = universalUri;
-                ArgBaseDirectory = argBaseDirectory;
-                ExpectedResult = expectedResult;
-            }
+            // Fields.
+            private readonly Action<Mock<IHandler>>? assertHandlerMock;
 
+            // Constructor.
             public ToAbsoluteUriUsesBaseDirectoryTestElement(
-                UniversalUri universalUri,
+                string uri,
+                string? defaultBaseDirectory,
                 string? argBaseDirectory,
-                Type expectedExceptionType)
+                Action<Mock<IHandler>>? assertHandlerMock = null,
+                Type? expectedExceptionType = null)
             {
-                UniversalUri = universalUri;
+                // Setup handler mock.
+                HandlerMock = new Mock<IHandler>();
+                HandlerMock.Setup(h => h.GetUriKind(OnlineAbsUri))
+                    .Returns(() => UniversalUriKind.OnlineAbsolute);
+                HandlerMock.Setup(h => h.GetUriKind(OnlineAbsUri2))
+                    .Returns(() => UniversalUriKind.OnlineAbsolute);
+                HandlerMock.Setup(h => h.GetUriKind(RelativeUri))
+                    .Returns(() => UniversalUriKind.Relative);
+                
+                // Set properties.
+                this.assertHandlerMock = assertHandlerMock;
+                UniversalUri = new UniversalUri(uri, HandlerMock.Object, defaultBaseDirectory: defaultBaseDirectory);
                 ArgBaseDirectory = argBaseDirectory;
                 ExpectedExceptionType = expectedExceptionType;
             }
 
+            // Properties.
             public UniversalUri UniversalUri { get; }
             public string? ArgBaseDirectory { get; }
-            public (string, UniversalUriKind)? ExpectedResult { get; }
             public Type? ExpectedExceptionType { get; }
+            public Mock<IHandler> HandlerMock { get; }
+            
+            // Methods.
+            public void Assert() =>
+                assertHandlerMock?.Invoke(HandlerMock);
         }
 
         public class ToAbsoluteUriUsesAllowedUriKindsTestElement
@@ -442,30 +454,31 @@ namespace Etherna.UniversalFiles
                 var tests = new List<ToAbsoluteUriUsesBaseDirectoryTestElement>
                 {
                     //null constructor, null method
-                    new ToAbsoluteUriUsesBaseDirectoryTestElement(
-                        new UniversalUri("test"),
+                    new(RelativeUri,
                         null,
-                        typeof(InvalidOperationException)),
+                        null,
+                        expectedExceptionType: typeof(InvalidOperationException)),
         
                     //set constructor, null method
-                    new ToAbsoluteUriUsesBaseDirectoryTestElement(
-                        new UniversalUri("test",
-                            defaultBaseDirectory: "https://constructor.com"),
+                    new(RelativeUri,
+                        OnlineAbsUri,
                         null,
-                        ("https://constructor.com/test", UniversalUriKind.OnlineAbsolute)),
+                        assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
+                            RelativeUri, OnlineAbsUri, UniversalUriKind.OnlineRelative), Times.Once)),
         
                     //null constructor, set method
-                    new ToAbsoluteUriUsesBaseDirectoryTestElement(
-                        new UniversalUri("test"),
-                        "https://method.com",
-                        ("https://method.com/test", UniversalUriKind.OnlineAbsolute)),
-        
+                    new(RelativeUri,
+                        null,
+                        OnlineAbsUri,
+                        assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
+                            RelativeUri, OnlineAbsUri, UniversalUriKind.OnlineRelative), Times.Once)),
+                    
                     //set constructor, set method
-                    new ToAbsoluteUriUsesBaseDirectoryTestElement(
-                        new UniversalUri("test",
-                            defaultBaseDirectory: "https://constructor.com"),
-                        "https://method.com",
-                        ("https://method.com/test", UniversalUriKind.OnlineAbsolute))
+                    new(RelativeUri,
+                        OnlineAbsUri,
+                        OnlineAbsUri2,
+                        assertHandlerMock: mock => mock.Verify(h => h.UriToAbsoluteUri(
+                            RelativeUri, OnlineAbsUri2, UniversalUriKind.OnlineRelative), Times.Once)),
                 };
         
                 return tests.Select(t => new object[] { t });
@@ -585,12 +598,12 @@ namespace Etherna.UniversalFiles
         [Theory, MemberData(nameof(ToAbsoluteUriUsesBaseDirectoryTests))]
         public void ToAbsoluteUriUsesBaseDirectory(ToAbsoluteUriUsesBaseDirectoryTestElement test)
         {
-            if (test.ExpectedResult is not null)
+            if (test.ExpectedExceptionType is null)
             {
-                var result = test.UniversalUri.ToAbsoluteUri(
+                test.UniversalUri.ToAbsoluteUri(
                     baseDirectory: test.ArgBaseDirectory);
-        
-                Assert.Equal(test.ExpectedResult, result);
+
+                test.Assert();
             }
             else
             {

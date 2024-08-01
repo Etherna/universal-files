@@ -12,14 +12,6 @@
 // You should have received a copy of the GNU Lesser General Public License along with UniversalFiles.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using System.Net.Http;
+using System.Runtime.CompilerServices;
 
-namespace Etherna.UniversalFiles
-{
-    public class UniversalFileProvider(
-        IHttpClientFactory httpClientFactory)
-        : IUniversalFileProvider
-    {
-        public UniversalFile GetNewFile(UniversalUri fileUri) => new(fileUri, httpClientFactory);
-    }
-}
+[assembly: InternalsVisibleTo("UniversalFiles.Swarm")]

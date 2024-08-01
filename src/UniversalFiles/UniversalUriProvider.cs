@@ -12,11 +12,23 @@
 // You should have received a copy of the GNU Lesser General Public License along with UniversalFiles.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using Etherna.UniversalFiles.Handlers;
+using System.Net.Http;
+
 namespace Etherna.UniversalFiles
 {
-    public interface IUniversalFileProvider
+    public class UniversalUriProvider(
+        IHttpClientFactory httpClientFactory)
+        : IUniversalUriProvider
     {
-        UniversalFile GetNewFile(
-            UniversalUri fileUri);
+        // Fields.
+        private readonly BasicHandler basicHandler = new(httpClientFactory);
+        
+        // Methods.
+        public UniversalUri GetNewUri(
+            string uri,
+            UniversalUriKind allowedUriKinds = UniversalUriKind.All,
+            string? defaultBaseDirectory = null) =>
+            new(uri, basicHandler, allowedUriKinds, defaultBaseDirectory);
     }
 }

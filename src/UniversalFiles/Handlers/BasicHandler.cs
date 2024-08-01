@@ -208,7 +208,7 @@ namespace Etherna.UniversalFiles.Handlers
                 UniversalUriKind.OnlineAbsolute => (new Uri(originalUri, System.UriKind.Absolute).ToString(), UniversalUriKind.OnlineAbsolute),
 
                 UniversalUriKind.OnlineRelative => (new Uri(
-                    new Uri(baseDirectory!, System.UriKind.Absolute),
+                    new Uri(baseDirectory!, UriKind.Absolute),
                     string.Join('/', originalUri.Split('/', '\\').Select(Uri.EscapeDataString))).ToString(), UniversalUriKind.OnlineAbsolute),
 
                 _ => throw new InvalidOperationException("Can't find a valid uri kind")
@@ -224,13 +224,19 @@ namespace Etherna.UniversalFiles.Handlers
                 return null;
 
             var (contentStream, encoding) = result.Value;
-            var byteArrayContent = contentStream.ToArray();
+            
+            // Copy stream to memory stream.
+            using var memoryStream = new MemoryStream();
+            await contentStream.CopyToAsync(memoryStream).ConfigureAwait(false);
+            memoryStream.Position = 0;
+            
+            var byteArrayContent = memoryStream.ToArray();
             await contentStream.DisposeAsync().ConfigureAwait(false);
 
             return (byteArrayContent, encoding);
         }
         
-        private async Task<(MemoryStream Stream, Encoding? Encoding)?> TryGetOnlineAsStreamAsync(
+        private async Task<(Stream Stream, Encoding? Encoding)?> TryGetOnlineAsStreamAsync(
             string onlineAbsoluteUri)
         {
             try
@@ -241,13 +247,8 @@ namespace Etherna.UniversalFiles.Handlers
                     return null;
 
                 // Get content with encoding.
-                using var contentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                var contentStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 Encoding? contentEncoding = null;
-
-                // Copy stream to memory stream.
-                var memoryStream = new MemoryStream();
-                await contentStream.CopyToAsync(memoryStream).ConfigureAwait(false);
-                memoryStream.Position = 0;
 
                 // Try to extract the encoding from the Content-Type header.
                 if (response.Content.Headers.ContentType?.CharSet != null)
@@ -256,7 +257,7 @@ namespace Etherna.UniversalFiles.Handlers
                     catch (ArgumentException) { }
                 }
 
-                return (memoryStream, contentEncoding);
+                return (contentStream, contentEncoding);
             }
             catch
             {

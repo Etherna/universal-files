@@ -55,7 +55,7 @@ namespace Etherna.UniversalFiles
         /// </summary>
         /// <param name="allowedUriKinds">Optional restrictions for original uri kind</param>
         /// <param name="baseDirectory">Optional base directory, required for online relative uri</param>
-        /// <returns>Absolute uri and its kind</returns>
+        /// <returns>Absolute uri and uri kind</returns>
         public (string, UniversalUriKind) ToAbsoluteUri(
             UniversalUriKind allowedUriKinds = UniversalUriKind.All,
             string? baseDirectory = null)
@@ -88,7 +88,7 @@ namespace Etherna.UniversalFiles
                 (actualAllowedUriKinds & UniversalUriKind.Online) != 0)
                 throw new InvalidOperationException("Unable to distinguish between local and online uri. Try to restrict allowed uri kinds");
 
-            //check if could be an online relative uri, and base directory is null
+            //check if it could be an online relative uri, and base directory is null
             if ((actualAllowedUriKinds & UniversalUriKind.OnlineRelative) != 0 &&
                 baseDirectory is null)
                 throw new InvalidOperationException("Can't resolve online relative uri. Specify a base directory");

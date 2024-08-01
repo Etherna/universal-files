@@ -145,7 +145,7 @@ namespace Etherna.UniversalFiles.Handlers
                     new("/parent/test",
                         UniversalUriKind.LocalAbsolute,
                         (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? //different behavior on windows host
-                            Path.GetFullPath("/parent") :
+                            "\\parent" :
                             "/parent",
                             UniversalUriKind.LocalAbsolute)),
         
@@ -153,20 +153,20 @@ namespace Etherna.UniversalFiles.Handlers
                     new("https://example.com",
                         UniversalUriKind.OnlineAbsolute,
                         ((string, UniversalUriKind)?)null),
-        
+                    
                     new("https://example.com/",
                         UniversalUriKind.OnlineAbsolute,
                         ((string, UniversalUriKind)?)null),
-        
+                    
                     //online with parent
                     new("https://example.com/test",
                         UniversalUriKind.OnlineAbsolute,
                         ("https://example.com/", UniversalUriKind.OnlineAbsolute)),
-        
+                    
                     new("https://example.com/test/",
                         UniversalUriKind.OnlineAbsolute,
                         ("https://example.com/", UniversalUriKind.OnlineAbsolute)),
-        
+                    
                     new("https://example.com/parent/test",
                         UniversalUriKind.OnlineAbsolute,
                         ("https://example.com/parent/", UniversalUriKind.OnlineAbsolute)),

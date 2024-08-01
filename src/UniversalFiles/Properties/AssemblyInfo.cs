@@ -1,4 +1,4 @@
-﻿// Copyright 2023-present Etherna SA
+// Copyright 2023-present Etherna SA
 // This file is part of UniversalFiles.
 // 
 // UniversalFiles is free software: you can redistribute it and/or modify it under the terms of the
@@ -12,22 +12,6 @@
 // You should have received a copy of the GNU Lesser General Public License along with UniversalFiles.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using System;
+using System.Runtime.CompilerServices;
 
-namespace Etherna.UniversalFiles
-{
-    [Flags]
-    public enum UniversalUriKind
-    {
-        None = 0,
-        LocalAbsolute = 1,
-        LocalRelative = 2,
-        OnlineAbsolute = 4,
-        OnlineRelative = 8,
-        Absolute = LocalAbsolute | OnlineAbsolute,
-        Relative = LocalRelative | OnlineRelative,
-        Local = LocalAbsolute | LocalRelative,
-        Online = OnlineAbsolute | OnlineRelative,
-        All = Absolute | Relative,
-    }
-}
+[assembly: InternalsVisibleTo("UniversalFiles.Swarm")]

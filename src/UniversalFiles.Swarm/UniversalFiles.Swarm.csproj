@@ -13,6 +13,7 @@
     <IsAotCompatible>true</IsAotCompatible>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
 
     <RepositoryUrl>https://github.com/Etherna/universal-files</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

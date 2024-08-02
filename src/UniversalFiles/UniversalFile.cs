@@ -25,7 +25,7 @@ namespace Etherna.UniversalFiles
         private (byte[], Encoding?)? onlineResourceCache;
 
         // Constructor.
-        internal UniversalFile(
+        public UniversalFile(
             UniversalUri fileUri)
         {
             ArgumentNullException.ThrowIfNull(fileUri, nameof(fileUri));

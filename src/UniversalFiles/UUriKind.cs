@@ -17,7 +17,7 @@ using System;
 namespace Etherna.UniversalFiles
 {
     [Flags]
-    public enum UniversalUriKind
+    public enum UUriKind
     {
         None = 0,
         LocalAbsolute = 1,

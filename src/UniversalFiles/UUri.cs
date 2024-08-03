@@ -12,42 +12,36 @@
 // You should have received a copy of the GNU Lesser General Public License along with UniversalFiles.
 // If not, see <https://www.gnu.org/licenses/>.
 
-using Etherna.UniversalFiles.Handlers;
 using System;
-using System.Threading.Tasks;
 
 namespace Etherna.UniversalFiles
 {
-    public class UniversalUri
+    public abstract class UUri
     {
         // Fields.
         private readonly string? defaultBaseDirectory;
 
         // Constructor.
-        public UniversalUri(
+        protected UUri(
             string uri,
-            IHandler handler,
-            UniversalUriKind allowedUriKinds = UniversalUriKind.All,
+            UUriKind uriKind,
             string? defaultBaseDirectory = null)
         {
-            ArgumentNullException.ThrowIfNull(handler, nameof(handler));
             if (string.IsNullOrWhiteSpace(uri))
                 throw new ArgumentException("Uri cannot be null or white spaces", nameof(uri));
 
             this.defaultBaseDirectory = defaultBaseDirectory;
-            Handler = handler;
             OriginalUri = uri;
-            UriKind = handler.GetUriKind(uri) & allowedUriKinds;
+            UriKind = uriKind;
 
             // Final check.
-            if (UriKind == UniversalUriKind.None)
+            if (UriKind == UUriKind.None)
                 throw new ArgumentException("Invalid uri with allowed uri types", nameof(uri));
         }
 
         // Properties.
-        public IHandler Handler { get; }
         public string OriginalUri { get; }
-        public UniversalUriKind UriKind { get; }
+        public UUriKind UriKind { get; }
 
         // Methods.
         /// <summary>
@@ -56,8 +50,8 @@ namespace Etherna.UniversalFiles
         /// <param name="allowedUriKinds">Optional restrictions for original uri kind</param>
         /// <param name="baseDirectory">Optional base directory, required for online relative uri</param>
         /// <returns>Absolute uri and uri kind</returns>
-        public (string, UniversalUriKind) ToAbsoluteUri(
-            UniversalUriKind allowedUriKinds = UniversalUriKind.All,
+        public (string, UUriKind) ToAbsoluteUri(
+            UUriKind allowedUriKinds = UUriKind.All,
             string? baseDirectory = null)
         {
             // Define actual allowed uri kinds.
@@ -65,31 +59,31 @@ namespace Etherna.UniversalFiles
 
             // Check with base directory.
             baseDirectory ??= defaultBaseDirectory;
-            if ((actualAllowedUriKinds & UniversalUriKind.Relative) != 0 &&
+            if ((actualAllowedUriKinds & UUriKind.Relative) != 0 &&
                 baseDirectory is not null)
             {
-                var baseDirectoryUriKind = Handler.GetUriKind(baseDirectory) & UniversalUriKind.Absolute;
+                var baseDirectoryUriKind = GetUriKindHelper(baseDirectory) & UUriKind.Absolute;
 
                 actualAllowedUriKinds &= baseDirectoryUriKind switch
                 {
-                    UniversalUriKind.LocalAbsolute => UniversalUriKind.Local,
-                    UniversalUriKind.OnlineAbsolute => UniversalUriKind.Online,
+                    UUriKind.LocalAbsolute => UUriKind.Local,
+                    UUriKind.OnlineAbsolute => UUriKind.Online,
                     _ => throw new InvalidOperationException("Base directory can only be absolute"),
                 };
             }
 
             // Checks.
             //none allowed uri kinds.
-            if (actualAllowedUriKinds == UniversalUriKind.None)
+            if (actualAllowedUriKinds == UUriKind.None)
                 throw new InvalidOperationException("Can't identify a valid uri kind");
             
             //local and online ambiguity
-            if ((actualAllowedUriKinds & UniversalUriKind.Local) != 0 &&
-                (actualAllowedUriKinds & UniversalUriKind.Online) != 0)
+            if ((actualAllowedUriKinds & UUriKind.Local) != 0 &&
+                (actualAllowedUriKinds & UUriKind.Online) != 0)
                 throw new InvalidOperationException("Unable to distinguish between local and online uri. Try to restrict allowed uri kinds");
 
             //check if it could be an online relative uri, and base directory is null
-            if ((actualAllowedUriKinds & UniversalUriKind.OnlineRelative) != 0 &&
+            if ((actualAllowedUriKinds & UUriKind.OnlineRelative) != 0 &&
                 baseDirectory is null)
                 throw new InvalidOperationException("Can't resolve online relative uri. Specify a base directory");
 
@@ -104,11 +98,8 @@ namespace Etherna.UniversalFiles
              * - if uri can be online relative, then it can't be an absoulute or a local relative.
              *   It implies that a base directory must be present, and this implies same previous considerations.
              */
-            return Handler.UriToAbsoluteUri(OriginalUri, baseDirectory, actualAllowedUriKinds);
+            return UriToAbsoluteUri(OriginalUri, baseDirectory, actualAllowedUriKinds);
         }
-
-        public Task<string?> TryGetFileNameAsync() =>
-            Handler.TryGetFileNameAsync(OriginalUri);
 
         /// <summary>
         /// Get parent directory as an absolute uri
@@ -116,12 +107,24 @@ namespace Etherna.UniversalFiles
         /// <param name="allowedUriKinds">Optional restrictions for original uri kind</param>
         /// <param name="baseDirectory">Optional base directory, required for online relative uri</param>
         /// <returns>Parent directory absolute uri and its kind</returns>
-        public (string, UniversalUriKind)? TryGetParentDirectoryAsAbsoluteUri(
-            UniversalUriKind allowedUriKinds = UniversalUriKind.All,
+        public (string, UUriKind)? TryGetParentDirectoryAsAbsoluteUri(
+            UUriKind allowedUriKinds = UUriKind.All,
             string? baseDirectory = null)
         {
             var (absoluteUri, absoluteUriKind) = ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            return Handler.TryGetParentDirectoryAsAbsoluteUri(absoluteUri, absoluteUriKind);
+            return TryGetParentDirectoryAsAbsoluteUri(absoluteUri, absoluteUriKind);
         }
+        
+        // Protected methods.
+        protected abstract UUriKind GetUriKindHelper(string uri);
+
+        protected abstract (string AbsoluteUri, UUriKind UriKind)? TryGetParentDirectoryAsAbsoluteUri(
+            string absoluteUri,
+            UUriKind absoluteUriKind);
+        
+        protected abstract (string AbsoluteUri, UUriKind UriKind) UriToAbsoluteUri(
+            string originalUri,
+            string? baseDirectory,
+            UUriKind uriKind);
     }
 }

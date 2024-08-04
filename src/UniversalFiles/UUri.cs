@@ -18,9 +18,6 @@ namespace Etherna.UniversalFiles
 {
     public abstract class UUri
     {
-        // Fields.
-        private readonly string? defaultBaseDirectory;
-
         // Constructor.
         protected UUri(
             string uri,
@@ -30,7 +27,7 @@ namespace Etherna.UniversalFiles
             if (string.IsNullOrWhiteSpace(uri))
                 throw new ArgumentException("Uri cannot be null or white spaces", nameof(uri));
 
-            this.defaultBaseDirectory = defaultBaseDirectory;
+            DefaultBaseDirectory = defaultBaseDirectory;
             OriginalUri = uri;
             UriKind = uriKind;
 
@@ -40,6 +37,7 @@ namespace Etherna.UniversalFiles
         }
 
         // Properties.
+        public string? DefaultBaseDirectory { get; }
         public string OriginalUri { get; }
         public UUriKind UriKind { get; }
 
@@ -58,7 +56,7 @@ namespace Etherna.UniversalFiles
             var actualAllowedUriKinds = UriKind & allowedUriKinds;
 
             // Check with base directory.
-            baseDirectory ??= defaultBaseDirectory;
+            baseDirectory ??= DefaultBaseDirectory;
             if ((actualAllowedUriKinds & UUriKind.Relative) != 0 &&
                 baseDirectory is not null)
             {
@@ -116,13 +114,13 @@ namespace Etherna.UniversalFiles
         }
         
         // Protected methods.
-        protected abstract UUriKind GetUriKindHelper(string uri);
+        protected internal abstract UUriKind GetUriKindHelper(string uri);
 
-        protected abstract (string AbsoluteUri, UUriKind UriKind)? TryGetParentDirectoryAsAbsoluteUri(
+        protected internal abstract (string AbsoluteUri, UUriKind UriKind)? TryGetParentDirectoryAsAbsoluteUri(
             string absoluteUri,
             UUriKind absoluteUriKind);
         
-        protected abstract (string AbsoluteUri, UUriKind UriKind) UriToAbsoluteUri(
+        protected internal abstract (string AbsoluteUri, UUriKind UriKind) UriToAbsoluteUri(
             string originalUri,
             string? baseDirectory,
             UUriKind uriKind);

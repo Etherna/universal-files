@@ -56,9 +56,9 @@ namespace Etherna.UniversalFiles
         }
 
         // Protected methods.
-        protected override UUriKind GetUriKindHelper(string uri) => GetUriKind(uri);
+        protected internal override UUriKind GetUriKindHelper(string uri) => GetUriKind(uri);
 
-        protected override (string AbsoluteUri, UUriKind UriKind)? TryGetParentDirectoryAsAbsoluteUri(
+        protected internal override (string AbsoluteUri, UUriKind UriKind)? TryGetParentDirectoryAsAbsoluteUri(
             string absoluteUri,
             UUriKind absoluteUriKind)
         {
@@ -78,7 +78,7 @@ namespace Etherna.UniversalFiles
             }
         }
 
-        protected override (string AbsoluteUri, UUriKind UriKind) UriToAbsoluteUri(
+        protected internal override (string AbsoluteUri, UUriKind UriKind) UriToAbsoluteUri(
             string originalUri,
             string? baseDirectory,
             UUriKind uriKind)

@@ -19,6 +19,14 @@ namespace Etherna.UniversalFiles.Extensions
 {
     public static class UFileProviderExtension
     {
+        public static SwarmUFile BuildNewUFile(
+            this IUFileProvider fileProvider,
+            SwarmUUri uuri)
+        {
+            ArgumentNullException.ThrowIfNull(fileProvider, nameof(fileProvider));
+            return (SwarmUFile)fileProvider.BuildNewUFile(uuri);
+        }
+
         public static UFileProvider UseSwarmUFiles(
             this UFileProvider fileProvider,
             IBeeClient beeClient)

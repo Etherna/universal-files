@@ -18,6 +18,8 @@ namespace Etherna.UniversalFiles
 {
     public interface IUFileProvider
     {
+        BasicUFile BuildNewUFile(BasicUUri uuri);
+
         UFile BuildNewUFile(UUri uuri);
 
         Task<BasicUFile> ToLocalUFileAsync(

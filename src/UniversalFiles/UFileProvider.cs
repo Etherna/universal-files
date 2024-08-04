@@ -31,6 +31,9 @@ namespace Etherna.UniversalFiles
         }
         
         // Methods.
+        public BasicUFile BuildNewUFile(BasicUUri uuri) =>
+            (BasicUFile)BuildNewUFile((UUri)uuri);
+        
         public UFile BuildNewUFile(UUri uuri)
         {
             ArgumentNullException.ThrowIfNull(uuri, nameof(uuri));

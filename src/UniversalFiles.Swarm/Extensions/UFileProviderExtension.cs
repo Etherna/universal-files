@@ -13,31 +13,28 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using Etherna.BeeNet;
-using Etherna.BeeNet.Models;
-using Etherna.UniversalFiles.Handlers;
 using System;
 
 namespace Etherna.UniversalFiles.Extensions
 {
-    public static class UniversalUriProviderExtensions
+    public static class UFileProviderExtension
     {
-        public static UniversalUri GetNewUri(
-            this IUniversalUriProvider uriProvider,
-            SwarmUri swarmUri,
-            IBeeClient beeClient,
-            UniversalUriKind allowedUriKinds = UniversalUriKind.Online,
-            SwarmAddress? defaultBaseAddress = null)
+        public static SwarmUFile BuildNewUFile(
+            this IUFileProvider fileProvider,
+            SwarmUUri uuri)
         {
-            ArgumentNullException.ThrowIfNull(uriProvider, nameof(uriProvider));
+            ArgumentNullException.ThrowIfNull(fileProvider, nameof(fileProvider));
+            return (SwarmUFile)fileProvider.BuildNewUFile(uuri);
+        }
 
-            if ((allowedUriKinds & UniversalUriKind.Local) != 0)
-                throw new ArgumentException("Swarm uri can't be local");
-
-            return new(
-                swarmUri.ToString(),
-                new SwarmHandler(beeClient),
-                allowedUriKinds,
-                defaultBaseAddress.ToString());
+        public static UFileProvider UseSwarmUFiles(
+            this UFileProvider fileProvider,
+            IBeeClient beeClient)
+        {
+            ArgumentNullException.ThrowIfNull(fileProvider, nameof(fileProvider));
+            
+            fileProvider.RegisterUUriType<SwarmUUri>(uuri => new SwarmUFile(beeClient, uuri));
+            return fileProvider;
         }
     }
 }

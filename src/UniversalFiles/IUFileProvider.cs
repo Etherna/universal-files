@@ -12,10 +12,18 @@
 // You should have received a copy of the GNU Lesser General Public License along with UniversalFiles.
 // If not, see <https://www.gnu.org/licenses/>.
 
+using System.Threading.Tasks;
+
 namespace Etherna.UniversalFiles
 {
     public interface IUFileProvider
     {
         UFile BuildNewUFile(UUri uuri);
+
+        Task<BasicUFile> ToLocalUFileAsync(
+            UFile inputUFile,
+            UUriKind allowedUriKinds = UUriKind.All,
+            string? baseDirectory = null,
+            BasicUUri? outputUUri = null);
     }
 }

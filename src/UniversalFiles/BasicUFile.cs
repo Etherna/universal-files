@@ -16,30 +16,27 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Etherna.UniversalFiles.Handlers
+namespace Etherna.UniversalFiles
 {
-    /// <summary>
-    /// Supports local and online files with http protocol
-    /// </summary>
-    public class BasicHandler(
+    public class BasicUFile(
+        BasicUUri fileUri,
         IHttpClientFactory httpClientFactory)
-        : IHandler
+        : UFile(fileUri)
     {
-        // Methods.
-        public async Task<(bool Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> ExistsAsync(
+        // Protected methods.
+        protected override async Task<(bool Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> ExistsAsync(
             string absoluteUri,
-            UniversalUriKind absoluteUriKind)
+            UUriKind absoluteUriKind)
         {
             switch (absoluteUriKind)
             {
-                case UniversalUriKind.LocalAbsolute:
+                case UUriKind.LocalAbsolute:
                     return (File.Exists(absoluteUri) || Directory.Exists(absoluteUri), null);
 
-                case UniversalUriKind.OnlineAbsolute:
+                case UUriKind.OnlineAbsolute:
                     // Try to get resource byte size with an HEAD request.
                     var byteSyze = await TryGetOnlineByteSizeWithHeadRequestAsync(absoluteUri).ConfigureAwait(false);
                     if (byteSyze.HasValue)
@@ -54,16 +51,16 @@ namespace Etherna.UniversalFiles.Handlers
             }
         }
 
-        public async Task<(long Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> GetByteSizeAsync(
+        protected override async Task<(long Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> GetByteSizeAsync(
             string absoluteUri,
-            UniversalUriKind absoluteUriKind)
+            UUriKind absoluteUriKind)
         {
             switch (absoluteUriKind)
             {
-                case UniversalUriKind.LocalAbsolute:
+                case UUriKind.LocalAbsolute:
                     return (new FileInfo(absoluteUri).Length, null);
 
-                case UniversalUriKind.OnlineAbsolute:
+                case UUriKind.OnlineAbsolute:
                     // Try to get resource byte size with an HEAD request.
                     var byteSyze = await TryGetOnlineByteSizeWithHeadRequestAsync(absoluteUri).ConfigureAwait(false);
                     if (byteSyze.HasValue)
@@ -79,45 +76,16 @@ namespace Etherna.UniversalFiles.Handlers
             }
         }
 
-        public UniversalUriKind GetUriKind(string uri)
-        {
-            ArgumentNullException.ThrowIfNull(uri, nameof(uri));
-
-            var uriKind = UniversalUriKind.None;
-
-            if (uri.Length > 0)
-            {
-                //test online absolute
-                if (Uri.TryCreate(uri, UriKind.Absolute, out var onlineAbsUriResult) &&
-                    (onlineAbsUriResult.Scheme == Uri.UriSchemeHttp || onlineAbsUriResult.Scheme == Uri.UriSchemeHttps))
-                    uriKind |= UniversalUriKind.OnlineAbsolute;
-
-                //test online relative
-                if (Uri.TryCreate(uri, UriKind.Relative, out var _))
-                    uriKind |= UniversalUriKind.OnlineRelative;
-
-                //test local absolute and relative
-                if ((uriKind & UniversalUriKind.OnlineAbsolute) == 0)
-                {
-                    uriKind |= Path.IsPathRooted(uri) ?
-                        UniversalUriKind.LocalAbsolute :
-                        UniversalUriKind.LocalRelative;
-                }
-            }
-
-            return uriKind;
-        }
-
-        public async Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(
+        protected override async Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(
             string absoluteUri,
-            UniversalUriKind absoluteUriKind)
+            UUriKind absoluteUriKind)
         {
             switch (absoluteUriKind)
             {
-                case UniversalUriKind.LocalAbsolute:
+                case UUriKind.LocalAbsolute:
                     return (await File.ReadAllBytesAsync(absoluteUri).ConfigureAwait(false), null);
 
-                case UniversalUriKind.OnlineAbsolute:
+                case UUriKind.OnlineAbsolute:
                     return await TryGetOnlineAsByteArrayAsync(absoluteUri).ConfigureAwait(false) ??
                            throw new IOException($"Can't retrieve online resource at {absoluteUri}");
 
@@ -126,16 +94,16 @@ namespace Etherna.UniversalFiles.Handlers
             }
         }
 
-        public async Task<(Stream Stream, Encoding? Encoding)> ReadToStreamAsync(
+        protected override async Task<(Stream Stream, Encoding? Encoding)> ReadToStreamAsync(
             string absoluteUri,
-            UniversalUriKind absoluteUriKind)
+            UUriKind absoluteUriKind)
         {
             switch (absoluteUriKind)
             {
-                case UniversalUriKind.LocalAbsolute:
+                case UUriKind.LocalAbsolute:
                     return (File.OpenRead(absoluteUri), null);
                 
-                case UniversalUriKind.OnlineAbsolute:
+                case UUriKind.OnlineAbsolute:
                     return await TryGetOnlineAsStreamAsync(absoluteUri).ConfigureAwait(false) ??
                            throw new IOException($"Can't retrieve online resource at {absoluteUri}");
                 
@@ -144,7 +112,7 @@ namespace Etherna.UniversalFiles.Handlers
             }
         }
 
-        public Task<string?> TryGetFileNameAsync(string originalUri)
+        protected override Task<string?> TryGetFileNameAsync(string originalUri)
         {
             ArgumentNullException.ThrowIfNull(originalUri, nameof(originalUri));
             
@@ -152,67 +120,6 @@ namespace Etherna.UniversalFiles.Handlers
                 originalUri.EndsWith('\\'))
                 return Task.FromResult<string?>(null);
             return Task.FromResult<string?>(originalUri.Split('/', '\\').Last());
-        }
-
-        public (string AbsoluteUri, UniversalUriKind UriKind)? TryGetParentDirectoryAsAbsoluteUri(
-            string absoluteUri,
-            UniversalUriKind absoluteUriKind)
-        {
-            switch (absoluteUriKind)
-            {
-                case UniversalUriKind.LocalAbsolute:
-                    var dirName = Path.GetDirectoryName(absoluteUri);
-                    return dirName is null ? null :
-                        (dirName, UniversalUriKind.LocalAbsolute);
-
-                case UniversalUriKind.OnlineAbsolute:
-                    var segments = new Uri(absoluteUri, UriKind.Absolute).Segments;
-                    return segments.Length == 1 ? null : //if it's already root, return null
-                        (absoluteUri[..^segments.Last().Length], UniversalUriKind.OnlineAbsolute);
-
-                default: throw new InvalidOperationException("Invalid absolute uri kind. It should be well defined and absolute");
-            }
-        }
-
-        public (string AbsoluteUri, UniversalUriKind UriKind) UriToAbsoluteUri(
-            string originalUri,
-            string? baseDirectory,
-            UniversalUriKind uriKind)
-        {
-            ArgumentNullException.ThrowIfNull(originalUri, nameof(originalUri));
-            
-            // Verify base directory is absolute.
-            if ((uriKind & UniversalUriKind.Relative) != 0 &&
-                baseDirectory != null &&
-                (GetUriKind(baseDirectory) & UniversalUriKind.Absolute) == 0)
-                throw new InvalidOperationException("If uri kind can be relative and base directory is present, it must be absolute");
-            
-            // Resolve absolute url.
-            return uriKind switch
-            {
-                UniversalUriKind.LocalAbsolute =>
-                    RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
-                    !Path.IsPathFullyQualified(originalUri) && //Ex: "/test"
-                    baseDirectory is not null && Path.IsPathFullyQualified(baseDirectory) ?
-                        (Path.GetFullPath(originalUri, baseDirectory), UniversalUriKind.LocalAbsolute) : //take unit from base directory
-                        (Path.GetFullPath(originalUri), UniversalUriKind.LocalAbsolute),
-
-                UniversalUriKind.LocalRelative =>
-                    (Path.GetFullPath(
-                            originalUri,
-                            baseDirectory is not null ?
-                                Path.GetFullPath(baseDirectory) : //GetFullPath is required when on windows baseDirectory is a root path without unit name. Ex: "/test"
-                                Directory.GetCurrentDirectory()),
-                        UniversalUriKind.LocalAbsolute),
-
-                UniversalUriKind.OnlineAbsolute => (new Uri(originalUri, System.UriKind.Absolute).ToString(), UniversalUriKind.OnlineAbsolute),
-
-                UniversalUriKind.OnlineRelative => (new Uri(
-                    new Uri(baseDirectory!, UriKind.Absolute),
-                    string.Join('/', originalUri.Split('/', '\\').Select(Uri.EscapeDataString))).ToString(), UniversalUriKind.OnlineAbsolute),
-
-                _ => throw new InvalidOperationException("Can't find a valid uri kind")
-            };
         }
 
         // Helpers.
@@ -275,8 +182,8 @@ namespace Etherna.UniversalFiles.Handlers
 
                 if (response.Headers.TryGetValues("Content-Length", out var values))
                 {
-                    string contentLength = values.GetEnumerator().Current;
-                    if (long.TryParse(contentLength, out var byteSize))
+                    using var enumerator = values.GetEnumerator();
+                    if (long.TryParse(enumerator.Current, out var byteSize))
                         return byteSize;
                 }
             }

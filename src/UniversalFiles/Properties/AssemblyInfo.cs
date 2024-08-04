@@ -15,3 +15,4 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("UniversalFiles.Swarm")]
+[assembly: InternalsVisibleTo("UniversalFiles.Tests")]

@@ -19,14 +19,14 @@ using System.Threading.Tasks;
 
 namespace Etherna.UniversalFiles
 {
-    public class UniversalFile
+    public abstract class UFile
     {
         // Fields.
         private (byte[], Encoding?)? onlineResourceCache;
 
         // Constructor.
-        public UniversalFile(
-            UniversalUri fileUri)
+        protected UFile(
+            UUri fileUri)
         {
             ArgumentNullException.ThrowIfNull(fileUri, nameof(fileUri));
             
@@ -34,14 +34,14 @@ namespace Etherna.UniversalFiles
         }
 
         // Properties.
-        public UniversalUri FileUri { get; }
+        public UUri FileUri { get; }
 
         // Methods.
         public void ClearOnlineCache() => onlineResourceCache = null;
 
         public async Task<bool> ExistsAsync(
             bool useCacheIfOnline = false,
-            UniversalUriKind allowedUriKinds = UniversalUriKind.All,
+            UUriKind allowedUriKinds = UUriKind.All,
             string? baseDirectory = null)
         {
             // Use cache if enabled and available.
@@ -50,10 +50,10 @@ namespace Etherna.UniversalFiles
 
             // Get result from handler.
             var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            var (result, resultCache) = await FileUri.Handler.ExistsAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
+            var (result, resultCache) = await ExistsAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
             
             // Update cache if required.
-            if (absoluteUriKind == UniversalUriKind.OnlineAbsolute &&
+            if (absoluteUriKind == UUriKind.OnlineAbsolute &&
                 resultCache != null &&
                 useCacheIfOnline)
                 onlineResourceCache = resultCache;
@@ -63,7 +63,7 @@ namespace Etherna.UniversalFiles
 
         public async Task<long> GetByteSizeAsync(
             bool useCacheIfOnline = false,
-            UniversalUriKind allowedUriKinds = UniversalUriKind.All,
+            UUriKind allowedUriKinds = UUriKind.All,
             string? baseDirectory = null)
         {
             // Use cache if enabled and available.
@@ -72,10 +72,10 @@ namespace Etherna.UniversalFiles
 
             // Get result from handler.
             var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            var (result, resultCache) = await FileUri.Handler.GetByteSizeAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
+            var (result, resultCache) = await GetByteSizeAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
             
             // Update cache if required.
-            if (absoluteUriKind == UniversalUriKind.OnlineAbsolute &&
+            if (absoluteUriKind == UUriKind.OnlineAbsolute &&
                 resultCache != null &&
                 useCacheIfOnline)
                 onlineResourceCache = resultCache;
@@ -85,7 +85,7 @@ namespace Etherna.UniversalFiles
 
         public async Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(
             bool useCacheIfOnline = false,
-            UniversalUriKind allowedUriKinds = UniversalUriKind.All,
+            UUriKind allowedUriKinds = UUriKind.All,
             string? baseDirectory = null)
         {
             // Use cache if enabled and available.
@@ -94,10 +94,10 @@ namespace Etherna.UniversalFiles
 
             // Get resource.
             var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            var result = await FileUri.Handler.ReadToByteArrayAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
+            var result = await ReadToByteArrayAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
             
             // Update cache if required.
-            if (absoluteUriKind == UniversalUriKind.OnlineAbsolute &&
+            if (absoluteUriKind == UUriKind.OnlineAbsolute &&
                 useCacheIfOnline)
                 onlineResourceCache = result;
 
@@ -105,17 +105,17 @@ namespace Etherna.UniversalFiles
         }
 
         public Task<(Stream Stream, Encoding? Encoding)> ReadToStreamAsync(
-            UniversalUriKind allowedUriKinds = UniversalUriKind.All,
+            UUriKind allowedUriKinds = UUriKind.All,
             string? baseDirectory = null)
         {
             // Get resource.
             var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            return FileUri.Handler.ReadToStreamAsync(absoluteUri, absoluteUriKind);
+            return ReadToStreamAsync(absoluteUri, absoluteUriKind);
         }
 
         public async Task<string> ReadToStringAsync(
             bool useCacheIfOnline = false,
-            UniversalUriKind allowedUriKinds = UniversalUriKind.All,
+            UUriKind allowedUriKinds = UUriKind.All,
             string? baseDirectory = null)
         {
             var (content, encoding) = await ReadToByteArrayAsync(
@@ -125,8 +125,26 @@ namespace Etherna.UniversalFiles
             encoding ??= Encoding.UTF8;
             return encoding.GetString(content);
         }
+        
+        public Task<string?> TryGetFileNameAsync() => TryGetFileNameAsync(FileUri.OriginalUri);
+        
+        // Protected methods.
+        protected abstract Task<(bool Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> ExistsAsync(
+            string absoluteUri,
+            UUriKind absoluteUriKind);
+        
+        protected abstract Task<(long Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> GetByteSizeAsync(
+            string absoluteUri,
+            UUriKind absoluteUriKind);
+        
+        protected abstract Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(
+            string absoluteUri,
+            UUriKind absoluteUriKind);
+        
+        protected abstract Task<(Stream Stream, Encoding? Encoding)> ReadToStreamAsync(
+            string absoluteUri,
+            UUriKind absoluteUriKind);
 
-        public Task<string?> TryGetFileNameAsync() =>
-            FileUri.TryGetFileNameAsync();
+        protected abstract Task<string?> TryGetFileNameAsync(string originalUri);
     }
 }

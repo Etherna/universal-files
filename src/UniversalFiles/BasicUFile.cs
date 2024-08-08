@@ -28,22 +28,23 @@ namespace Etherna.UniversalFiles
     {
         // Protected methods.
         protected override async Task<(bool Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> ExistsAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind)
+            UUri absoluteUri)
         {
-            switch (absoluteUriKind)
+            ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
+            
+            switch (absoluteUri.UriKind)
             {
                 case UUriKind.LocalAbsolute:
-                    return (File.Exists(absoluteUri) || Directory.Exists(absoluteUri), null);
+                    return (File.Exists(absoluteUri.OriginalUri) || Directory.Exists(absoluteUri.OriginalUri), null);
 
                 case UUriKind.OnlineAbsolute:
                     // Try to get resource byte size with an HEAD request.
-                    var byteSyze = await TryGetOnlineByteSizeWithHeadRequestAsync(absoluteUri).ConfigureAwait(false);
+                    var byteSyze = await TryGetOnlineByteSizeWithHeadRequestAsync(absoluteUri.OriginalUri).ConfigureAwait(false);
                     if (byteSyze.HasValue)
                         return (true, null);
 
                     // Otherwise, try to download it.
-                    var onlineContent = await TryGetOnlineAsByteArrayAsync(absoluteUri).ConfigureAwait(false);
+                    var onlineContent = await TryGetOnlineAsByteArrayAsync(absoluteUri.OriginalUri).ConfigureAwait(false);
                     return (onlineContent != null, onlineContent);
 
                 default: throw new InvalidOperationException(
@@ -52,22 +53,23 @@ namespace Etherna.UniversalFiles
         }
 
         protected override async Task<(long Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> GetByteSizeAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind)
+            UUri absoluteUri)
         {
-            switch (absoluteUriKind)
+            ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
+            
+            switch (absoluteUri.UriKind)
             {
                 case UUriKind.LocalAbsolute:
-                    return (new FileInfo(absoluteUri).Length, null);
+                    return (new FileInfo(absoluteUri.OriginalUri).Length, null);
 
                 case UUriKind.OnlineAbsolute:
                     // Try to get resource byte size with an HEAD request.
-                    var byteSyze = await TryGetOnlineByteSizeWithHeadRequestAsync(absoluteUri).ConfigureAwait(false);
+                    var byteSyze = await TryGetOnlineByteSizeWithHeadRequestAsync(absoluteUri.OriginalUri).ConfigureAwait(false);
                     if (byteSyze.HasValue)
                         return (byteSyze.Value, null);
 
                     // Otherwise, try to download it.
-                    var onlineContent = await TryGetOnlineAsByteArrayAsync(absoluteUri).ConfigureAwait(false) ??
+                    var onlineContent = await TryGetOnlineAsByteArrayAsync(absoluteUri.OriginalUri).ConfigureAwait(false) ??
                                         throw new IOException($"Can't retrieve online resource at {absoluteUri}");
                     return (onlineContent.ByteArray.LongLength, onlineContent);
 
@@ -77,16 +79,17 @@ namespace Etherna.UniversalFiles
         }
 
         protected override async Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind)
+            UUri absoluteUri)
         {
-            switch (absoluteUriKind)
+            ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
+            
+            switch (absoluteUri.UriKind)
             {
                 case UUriKind.LocalAbsolute:
-                    return (await File.ReadAllBytesAsync(absoluteUri).ConfigureAwait(false), null);
+                    return (await File.ReadAllBytesAsync(absoluteUri.OriginalUri).ConfigureAwait(false), null);
 
                 case UUriKind.OnlineAbsolute:
-                    return await TryGetOnlineAsByteArrayAsync(absoluteUri).ConfigureAwait(false) ??
+                    return await TryGetOnlineAsByteArrayAsync(absoluteUri.OriginalUri).ConfigureAwait(false) ??
                            throw new IOException($"Can't retrieve online resource at {absoluteUri}");
 
                 default: throw new InvalidOperationException(
@@ -95,16 +98,17 @@ namespace Etherna.UniversalFiles
         }
 
         protected override async Task<(Stream Stream, Encoding? Encoding)> ReadToStreamAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind)
+            UUri absoluteUri)
         {
-            switch (absoluteUriKind)
+            ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
+            
+            switch (absoluteUri.UriKind)
             {
                 case UUriKind.LocalAbsolute:
-                    return (File.OpenRead(absoluteUri), null);
+                    return (File.OpenRead(absoluteUri.OriginalUri), null);
                 
                 case UUriKind.OnlineAbsolute:
-                    return await TryGetOnlineAsStreamAsync(absoluteUri).ConfigureAwait(false) ??
+                    return await TryGetOnlineAsStreamAsync(absoluteUri.OriginalUri).ConfigureAwait(false) ??
                            throw new IOException($"Can't retrieve online resource at {absoluteUri}");
                 
                 default: throw new InvalidOperationException(

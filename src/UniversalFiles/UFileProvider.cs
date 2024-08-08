@@ -70,7 +70,7 @@ namespace Etherna.UniversalFiles
             }
 
             using var inputFileStream = (await inputUFile.ReadToStreamAsync(allowedUriKinds, baseDirectory).ConfigureAwait(false)).Stream;
-            using var outputFileStream = new FileStream(outputUUri.ToAbsoluteUri().Item1, FileMode.Create);
+            using var outputFileStream = new FileStream(outputUUri.ToAbsoluteUri().OriginalUri, FileMode.Create);
             await inputFileStream.CopyToAsync(outputFileStream).ConfigureAwait(false);
 
             return (BasicUFile)BuildNewUFile(outputUUri);

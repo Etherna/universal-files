@@ -56,6 +56,38 @@ namespace Etherna.UniversalFiles
         }
 
         // Protected methods.
+        public override UUri CombineWith(params UUri[] uuris)
+        {
+            ArgumentNullException.ThrowIfNull(uuris, nameof(uuris));
+
+            var combined = this;
+            foreach (var uuri in uuris.Cast<BasicUUri>())
+            {
+                // Exclude ambiguity.
+                if ((uuri.UriKind & UUriKind.Absolute) != 0 &&
+                    (uuri.UriKind & UUriKind.Relative) != 0)
+                    throw new InvalidOperationException($"UUri can be both absolute or relative: {uuri.OriginalUri}");
+
+                if ((uuri.UriKind & UUriKind.Absolute) != 0) //if is absolute
+                {
+                    var combinedUriKind = UUriKind.None;
+                    if ((combined.UriKind & UUriKind.Local) != 0)
+                        combinedUriKind |= UUriKind.LocalAbsolute;
+                    if ((combined.UriKind & UUriKind.Online) != 0)
+                        combinedUriKind |= UUriKind.OnlineAbsolute;
+                    combinedUriKind &= uuri.UriKind;
+
+                    combined = new BasicUUri(uuri.OriginalUri, combinedUriKind);
+                }
+                else //else, it is relative
+                {
+                    //TODO
+                }
+            }
+
+            return combined;
+        }
+
         protected internal override UUriKind GetUriKindHelper(string uri) => GetUriKind(uri);
 
         protected internal override UUri? TryGetParentDirectoryAsAbsoluteUri(UUri absoluteUri)

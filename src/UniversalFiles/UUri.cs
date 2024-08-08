@@ -42,6 +42,8 @@ namespace Etherna.UniversalFiles
         public UUriKind UriKind { get; }
 
         // Methods.
+        public abstract UUri CombineWith(params UUri[] uuris);
+        
         public override bool Equals(object? obj)
         {
             if (ReferenceEquals(this, obj)) return true;

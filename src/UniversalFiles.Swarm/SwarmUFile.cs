@@ -26,17 +26,18 @@ namespace Etherna.UniversalFiles
         : UFile(fileUri)
     {
         protected override async Task<(bool Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> ExistsAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind)
+            UUri absoluteUri)
         {
-            if (absoluteUriKind != UUriKind.OnlineAbsolute)
+            ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
+            
+            if (absoluteUri.UriKind != UUriKind.OnlineAbsolute)
                 throw new InvalidOperationException(
                     "Invalid online absolute uri kind. It can't be casted to SwarmAddress");
 
             // Try to get file head.
             try
             {
-                var headers = await beeClient.TryGetFileHeadersAsync(absoluteUri).ConfigureAwait(false);
+                var headers = await beeClient.TryGetFileHeadersAsync(absoluteUri.OriginalUri).ConfigureAwait(false);
                 if (headers is null)
                     return (false, null);
             }
@@ -46,20 +47,19 @@ namespace Etherna.UniversalFiles
         }
 
         protected override async Task<(long Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> GetByteSizeAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind)
+            UUri absoluteUri)
         {
-            var size = await beeClient.TryGetFileSizeAsync(absoluteUri).ConfigureAwait(false);
+            ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
+            
+            var size = await beeClient.TryGetFileSizeAsync(absoluteUri.OriginalUri).ConfigureAwait(false);
             if (size is null)
                 throw new InvalidOperationException();
             return (size.Value, null);
         }
 
-        protected override async Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind)
+        protected override async Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(UUri absoluteUri)
         {
-            var (contentStream, encoding) = await ReadToStreamAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
+            var (contentStream, encoding) = await ReadToStreamAsync(absoluteUri).ConfigureAwait(false);
             
             // Copy stream to memory stream.
             using var memoryStream = new MemoryStream();
@@ -72,11 +72,11 @@ namespace Etherna.UniversalFiles
             return (byteArrayContent, encoding);
         }
 
-        protected override async Task<(Stream Stream, Encoding? Encoding)> ReadToStreamAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind)
+        protected override async Task<(Stream Stream, Encoding? Encoding)> ReadToStreamAsync(UUri absoluteUri)
         {
-            var result = await beeClient.GetFileAsync(absoluteUri).ConfigureAwait(false);
+            ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
+            
+            var result = await beeClient.GetFileAsync(absoluteUri.OriginalUri).ConfigureAwait(false);
             
             // Try to extract the encoding from the Content-Type header.
             Encoding? contentEncoding = null;

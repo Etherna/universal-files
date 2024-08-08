@@ -42,13 +42,28 @@ namespace Etherna.UniversalFiles
         public UUriKind UriKind { get; }
 
         // Methods.
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is not UUri uuriObj) return false;
+            return GetType() == uuriObj.GetType() &&
+                   DefaultBaseDirectory == uuriObj.DefaultBaseDirectory &&
+                   OriginalUri == uuriObj.OriginalUri &&
+                   UriKind == uuriObj.UriKind;
+        }
+
+        public override int GetHashCode() =>
+            (DefaultBaseDirectory?.GetHashCode(StringComparison.InvariantCulture) ?? 0) ^
+            OriginalUri.GetHashCode(StringComparison.InvariantCulture) ^
+            UriKind.GetHashCode();
+
         /// <summary>
         /// Get current uri as an absolute uri
         /// </summary>
         /// <param name="allowedUriKinds">Optional restrictions for original uri kind</param>
         /// <param name="baseDirectory">Optional base directory, required for online relative uri</param>
         /// <returns>Absolute uri and uri kind</returns>
-        public (string, UUriKind) ToAbsoluteUri(
+        public UUri ToAbsoluteUri(
             UUriKind allowedUriKinds = UUriKind.All,
             string? baseDirectory = null)
         {
@@ -105,22 +120,20 @@ namespace Etherna.UniversalFiles
         /// <param name="allowedUriKinds">Optional restrictions for original uri kind</param>
         /// <param name="baseDirectory">Optional base directory, required for online relative uri</param>
         /// <returns>Parent directory absolute uri and its kind</returns>
-        public (string, UUriKind)? TryGetParentDirectoryAsAbsoluteUri(
+        public UUri? TryGetParentDirectoryAsAbsoluteUri(
             UUriKind allowedUriKinds = UUriKind.All,
             string? baseDirectory = null)
         {
-            var (absoluteUri, absoluteUriKind) = ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            return TryGetParentDirectoryAsAbsoluteUri(absoluteUri, absoluteUriKind);
+            var absoluteUri = ToAbsoluteUri(allowedUriKinds, baseDirectory);
+            return TryGetParentDirectoryAsAbsoluteUri(absoluteUri);
         }
         
         // Protected methods.
         protected internal abstract UUriKind GetUriKindHelper(string uri);
 
-        protected internal abstract (string AbsoluteUri, UUriKind UriKind)? TryGetParentDirectoryAsAbsoluteUri(
-            string absoluteUri,
-            UUriKind absoluteUriKind);
+        protected internal abstract UUri? TryGetParentDirectoryAsAbsoluteUri(UUri absoluteUri);
         
-        protected internal abstract (string AbsoluteUri, UUriKind UriKind) UriToAbsoluteUri(
+        protected internal abstract UUri UriToAbsoluteUri(
             string originalUri,
             string? baseDirectory,
             UUriKind uriKind);

@@ -35,12 +35,10 @@ namespace Etherna.UniversalFiles
         // Protected methods.
         protected internal override UUriKind GetUriKindHelper(string uri) => GetUriKind(uri);
 
-        protected internal override (string AbsoluteUri, UUriKind UriKind)? TryGetParentDirectoryAsAbsoluteUri(
-            string absoluteUri,
-            UUriKind absoluteUriKind) =>
+        protected internal override UUri? TryGetParentDirectoryAsAbsoluteUri(UUri absoluteUri) =>
             throw new InvalidOperationException("Swarm doesn't implement concept of directories");
 
-        protected internal override (string AbsoluteUri, UUriKind UriKind) UriToAbsoluteUri(
+        protected internal override UUri UriToAbsoluteUri(
             string originalUri,
             string? baseDirectory,
             UUriKind uriKind)
@@ -51,7 +49,7 @@ namespace Etherna.UniversalFiles
             switch (uriKind)
             {
                 case UUriKind.OnlineAbsolute:
-                    return (new SwarmAddress(originalUri).ToString(), UUriKind.OnlineAbsolute);
+                    return new SwarmUUri(new SwarmAddress(originalUri).ToString(), UUriKind.OnlineAbsolute);
 
                 case UUriKind.OnlineRelative:
                     if (baseDirectory is null)
@@ -65,7 +63,7 @@ namespace Etherna.UniversalFiles
                     var swarmUri = new SwarmUri(originalUri, System.UriKind.Relative);
                     var swarmAddress = swarmUri.ToSwarmAddress(baseDirectory);
             
-                    return (swarmAddress.ToString(), UUriKind.OnlineAbsolute);
+                    return new SwarmUUri(swarmAddress.ToString(), UUriKind.OnlineAbsolute);
 
                 default: throw new InvalidOperationException("Can't find a valid uri kind");
             }

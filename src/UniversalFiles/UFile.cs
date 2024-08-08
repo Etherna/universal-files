@@ -49,11 +49,11 @@ namespace Etherna.UniversalFiles
                 return true;
 
             // Get result from handler.
-            var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            var (result, resultCache) = await ExistsAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
+            var absoluteUri = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
+            var (result, resultCache) = await ExistsAsync(absoluteUri).ConfigureAwait(false);
             
             // Update cache if required.
-            if (absoluteUriKind == UUriKind.OnlineAbsolute &&
+            if (absoluteUri.UriKind == UUriKind.OnlineAbsolute &&
                 resultCache != null &&
                 useCacheIfOnline)
                 onlineResourceCache = resultCache;
@@ -71,11 +71,11 @@ namespace Etherna.UniversalFiles
                 return onlineResourceCache.Value.Item1.LongLength;
 
             // Get result from handler.
-            var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            var (result, resultCache) = await GetByteSizeAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
+            var absoluteUri = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
+            var (result, resultCache) = await GetByteSizeAsync(absoluteUri).ConfigureAwait(false);
             
             // Update cache if required.
-            if (absoluteUriKind == UUriKind.OnlineAbsolute &&
+            if (absoluteUri.UriKind == UUriKind.OnlineAbsolute &&
                 resultCache != null &&
                 useCacheIfOnline)
                 onlineResourceCache = resultCache;
@@ -93,11 +93,11 @@ namespace Etherna.UniversalFiles
                 return onlineResourceCache.Value;
 
             // Get resource.
-            var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            var result = await ReadToByteArrayAsync(absoluteUri, absoluteUriKind).ConfigureAwait(false);
+            var absoluteUri = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
+            var result = await ReadToByteArrayAsync(absoluteUri).ConfigureAwait(false);
             
             // Update cache if required.
-            if (absoluteUriKind == UUriKind.OnlineAbsolute &&
+            if (absoluteUri.UriKind == UUriKind.OnlineAbsolute &&
                 useCacheIfOnline)
                 onlineResourceCache = result;
 
@@ -109,8 +109,8 @@ namespace Etherna.UniversalFiles
             string? baseDirectory = null)
         {
             // Get resource.
-            var (absoluteUri, absoluteUriKind) = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
-            return ReadToStreamAsync(absoluteUri, absoluteUriKind);
+            var absoluteUri = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
+            return ReadToStreamAsync(absoluteUri);
         }
 
         public async Task<string> ReadToStringAsync(
@@ -130,20 +130,14 @@ namespace Etherna.UniversalFiles
         
         // Protected methods.
         protected abstract Task<(bool Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> ExistsAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind);
+            UUri absoluteUri);
         
         protected abstract Task<(long Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> GetByteSizeAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind);
+            UUri absoluteUri);
         
-        protected abstract Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind);
+        protected abstract Task<(byte[] ByteArray, Encoding? Encoding)> ReadToByteArrayAsync(UUri absoluteUri);
         
-        protected abstract Task<(Stream Stream, Encoding? Encoding)> ReadToStreamAsync(
-            string absoluteUri,
-            UUriKind absoluteUriKind);
+        protected abstract Task<(Stream Stream, Encoding? Encoding)> ReadToStreamAsync(UUri absoluteUri);
 
         protected abstract Task<string?> TryGetFileNameAsync(string originalUri);
     }

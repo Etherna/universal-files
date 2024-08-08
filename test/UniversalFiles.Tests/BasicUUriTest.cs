@@ -33,26 +33,24 @@ namespace Etherna.UniversalFiles
         }
 
         public class TryGetParentDirectoryAsAbsoluteUriTestElement(
-            string absoluteUri,
-            UUriKind absoluteUriKind,
-            (string, UUriKind)? expectedResult)
+            BasicUUri absoluteUri,
+            BasicUUri? expectedResult)
         {
-            public string AbsoluteUri { get; } = absoluteUri;
-            public UUriKind AbsoluteUriKind { get; } = absoluteUriKind;
-            public (string, UUriKind)? ExpectedResult { get; } = expectedResult;
+            public BasicUUri AbsoluteUri { get; } = absoluteUri;
+            public BasicUUri? ExpectedResult { get; } = expectedResult;
         }
 
         public class UriToAbsoluteUriTestElement(
             string originalUri,
             string? baseDirectory,
             UUriKind uriKind,
-            (string, UUriKind)? expectedResult = null,
+            BasicUUri? expectedResult = null,
             Type? expectedExceptionType = null)
         {
             public string OriginalUri { get; } = originalUri;
             public string? BaseDirectory { get; } = baseDirectory;
             public UUriKind UriKind { get; } = uriKind;
-            public (string, UUriKind)? ExpectedResult { get; } = expectedResult;
+            public BasicUUri? ExpectedResult { get; } = expectedResult;
             public Type? ExpectedExceptionType { get; } = expectedExceptionType;
         }
         
@@ -138,40 +136,33 @@ namespace Etherna.UniversalFiles
                 var tests = new List<TryGetParentDirectoryAsAbsoluteUriTestElement>
                 {
                     //local without parent
-                    new("/",
-                        UUriKind.LocalAbsolute,
+                    new(new BasicUUri("/", UUriKind.LocalAbsolute),
                         null),
 
                     //local with parent
-                    new("/parent/test",
-                        UUriKind.LocalAbsolute,
-                        (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                    new(new BasicUUri("/parent/test", UUriKind.LocalAbsolute),
+                        new BasicUUri(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                                 ? //different behavior on windows host
                                 "\\parent"
                                 : "/parent",
                             UUriKind.LocalAbsolute)),
 
                     //online without parent
-                    new("https://example.com",
-                        UUriKind.OnlineAbsolute,
+                    new(new BasicUUri("https://example.com", UUriKind.OnlineAbsolute),
                         null),
 
-                    new("https://example.com/",
-                        UUriKind.OnlineAbsolute,
+                    new(new BasicUUri("https://example.com/", UUriKind.OnlineAbsolute),
                         null),
 
                     //online with parent
-                    new("https://example.com/test",
-                        UUriKind.OnlineAbsolute,
-                        ("https://example.com/", UUriKind.OnlineAbsolute)),
+                    new(new BasicUUri("https://example.com/test", UUriKind.OnlineAbsolute),
+                        new BasicUUri("https://example.com/", UUriKind.OnlineAbsolute)),
 
-                    new("https://example.com/test/",
-                        UUriKind.OnlineAbsolute,
-                        ("https://example.com/", UUriKind.OnlineAbsolute)),
+                    new(new BasicUUri("https://example.com/test/", UUriKind.OnlineAbsolute),
+                        new BasicUUri("https://example.com/", UUriKind.OnlineAbsolute)),
 
-                    new("https://example.com/parent/test",
-                        UUriKind.OnlineAbsolute,
-                        ("https://example.com/parent/", UUriKind.OnlineAbsolute)),
+                    new(new BasicUUri("https://example.com/parent/test", UUriKind.OnlineAbsolute),
+                        new BasicUUri("https://example.com/parent/", UUriKind.OnlineAbsolute)),
                 };
 
                 return tests.Select(t => new object[] { t });
@@ -188,11 +179,9 @@ namespace Etherna.UniversalFiles
                     new("/test",
                         null,
                         UUriKind.LocalAbsolute,
-                        (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                                ? //different behavior on windows host
-                                Path.Combine(Path.GetPathRoot(Directory.GetCurrentDirectory())!, "test")
-                                : //ex: "C:\\test"
-                                "/test",
+                        new BasicUUri(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) //different behavior on windows host
+                                ? Path.Combine(Path.GetPathRoot(Directory.GetCurrentDirectory())!, "test") //ex: "C:\\test"
+                                : "/test",
                             UUriKind.LocalAbsolute)),
 
                     //local absolute windows-like, no base directory
@@ -201,9 +190,8 @@ namespace Etherna.UniversalFiles
                         RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                             ? UUriKind.LocalAbsolute
                             : UUriKind.LocalRelative,
-                        (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                                ? //different behavior on windows host
-                                "D:\\test"
+                        new BasicUUri(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) //different behavior on windows host
+                                ? "D:\\test"
                                 : Path.Combine(Directory.GetCurrentDirectory(), "D:\\test"),
                             UUriKind.LocalAbsolute)),
 
@@ -211,11 +199,9 @@ namespace Etherna.UniversalFiles
                     new("/test",
                         "/absolute/local",
                         UUriKind.LocalAbsolute,
-                        (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                            ? //different behavior on windows host
-                            Path.Combine(Path.GetPathRoot(Directory.GetCurrentDirectory())!, "test")
-                            : //ex: "C:\\test"
-                            "/test", UUriKind.LocalAbsolute)),
+                        new BasicUUri(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) //different behavior on windows host
+                            ? Path.Combine(Path.GetPathRoot(Directory.GetCurrentDirectory())!, "test") //ex: "C:\\test"
+                            :"/test", UUriKind.LocalAbsolute)),
 
                     //local absolute windows-like, with local base directory unix-like
                     new("D:\\test",
@@ -223,9 +209,8 @@ namespace Etherna.UniversalFiles
                         RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                             ? UUriKind.LocalAbsolute
                             : UUriKind.LocalRelative,
-                        (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                                ? //different behavior on windows host
-                                "D:\\test"
+                        new BasicUUri(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) //different behavior on windows host
+                                ? "D:\\test"
                                 : "/absolute/local/D:\\test",
                             UUriKind.LocalAbsolute)),
 
@@ -233,10 +218,9 @@ namespace Etherna.UniversalFiles
                     new("/test",
                         "E:\\absolute\\local",
                         UUriKind.LocalAbsolute,
-                        expectedResult: RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                            ? //different behavior on windows host
-                            ("E:\\test", UUriKind.LocalAbsolute)
-                            : ("/test", UUriKind.LocalAbsolute)),
+                        expectedResult: RuntimeInformation.IsOSPlatform(OSPlatform.Windows) //different behavior on windows host
+                            ? new BasicUUri("E:\\test", UUriKind.LocalAbsolute)
+                            : new BasicUUri("/test", UUriKind.LocalAbsolute)),
 
                     //local absolute windows-like, with local base directory windows-like
                     new("D:\\test",
@@ -244,84 +228,79 @@ namespace Etherna.UniversalFiles
                         RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                             ? UUriKind.LocalAbsolute
                             : UUriKind.LocalRelative,
-                        expectedResult: RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                            ? //different behavior on windows host
-                            ("D:\\test", UUriKind.LocalAbsolute)
+                        expectedResult: RuntimeInformation.IsOSPlatform(OSPlatform.Windows) //different behavior on windows host
+                            ? new BasicUUri("D:\\test", UUriKind.LocalAbsolute)
                             : null,
-                        expectedExceptionType: RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                            ? //different behavior on windows host
-                            null
+                        expectedExceptionType: RuntimeInformation.IsOSPlatform(OSPlatform.Windows) //different behavior on windows host
+                            ? null
                             : typeof(InvalidOperationException)), //throws exception because base directory is not absolute
 
                     //rooted online relative, with online base directory
                     new("/test",
                         "https://example.com/dir/",
                         UUriKind.OnlineRelative,
-                        ("https://example.com/test", UUriKind.OnlineAbsolute)),
+                        new BasicUUri("https://example.com/test", UUriKind.OnlineAbsolute)),
 
                     //not rooted online relative, with online base directory
                     new("my/test",
                         "https://example.com/dir/",
                         UUriKind.OnlineRelative,
-                        ("https://example.com/dir/my/test", UUriKind.OnlineAbsolute)),
+                        new BasicUUri("https://example.com/dir/my/test", UUriKind.OnlineAbsolute)),
 
                     //local relative (or online relative) with local restriction
                     new("test",
                         null,
                         UUriKind.LocalRelative,
-                        (Path.Combine(Directory.GetCurrentDirectory(), "test"), UUriKind.LocalAbsolute)),
+                        new BasicUUri(Path.Combine(Directory.GetCurrentDirectory(), "test"), UUriKind.LocalAbsolute)),
 
                     //local relative (or online relative), with local base directory unix-like
                     new("test",
                         "/absolute/local",
                         UUriKind.LocalRelative,
-                        (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                            ? //different behavior on windows host
-                            Path.Combine(Path.GetPathRoot(Directory.GetCurrentDirectory())!, "absolute\\local\\test")
+                        new BasicUUri(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) //different behavior on windows host
+                            ? Path.Combine(Path.GetPathRoot(Directory.GetCurrentDirectory())!, "absolute\\local\\test")
                             : "/absolute/local/test", UUriKind.LocalAbsolute)),
 
                     //local relative (or online relative), with local base directory windows-like
                     new("test",
                         "D:\\absolute\\local",
                         UUriKind.LocalRelative,
-                        expectedResult: RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                            ? //different behavior on windows host
-                            ("D:\\absolute\\local\\test", UUriKind.LocalAbsolute)
+                        expectedResult: RuntimeInformation.IsOSPlatform(OSPlatform.Windows) //different behavior on windows host
+                            ? new BasicUUri("D:\\absolute\\local\\test", UUriKind.LocalAbsolute)
                             : null,
-                        expectedExceptionType: RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
-                            ? //different behavior on windows host
-                            null
+                        expectedExceptionType: RuntimeInformation.IsOSPlatform(OSPlatform.Windows) //different behavior on windows host
+                            ? null
                             : typeof(InvalidOperationException)), //throws exception because is ambiguous, and anyway base directory is not absolute
 
                     //local relative (or online relative) with online base directory
                     new("test",
                         "https://example.com/dir/",
                         UUriKind.OnlineRelative,
-                        ("https://example.com/dir/test", UUriKind.OnlineAbsolute)),
+                        new BasicUUri("https://example.com/dir/test", UUriKind.OnlineAbsolute)),
 
                     //online absolute without restrictions
                     new("https://example.com/",
                         null,
                         UUriKind.OnlineAbsolute,
-                        ("https://example.com/", UUriKind.OnlineAbsolute)),
+                        new BasicUUri("https://example.com/", UUriKind.OnlineAbsolute)),
 
                     //online absolute, with local base directory unix-like
                     new("https://example.com/",
                         "/absolute/local",
                         UUriKind.OnlineAbsolute,
-                        ("https://example.com/", UUriKind.OnlineAbsolute)),
+                        new BasicUUri("https://example.com/", UUriKind.OnlineAbsolute)),
 
                     //online absolute, with local base directory windows-like
                     new("https://example.com/",
                         "C:\\absolute\\local",
                         UUriKind.OnlineAbsolute,
-                        ("https://example.com/", UUriKind.OnlineAbsolute)),
+                        new BasicUUri("https://example.com/", UUriKind.OnlineAbsolute)),
 
                     //online absolute with online base directory
                     new("https://example.com/",
                         "https://other-site.com/",
                         UUriKind.OnlineAbsolute,
-                        ("https://example.com/", UUriKind.OnlineAbsolute)),
+                        new BasicUUri("https://example.com/", UUriKind.OnlineAbsolute)),
 
                     //online absolute with relative base directory
                     new("https://example.com/",
@@ -373,7 +352,7 @@ namespace Etherna.UniversalFiles
         public void TryGetParentDirectoryAsAbsoluteUri(TryGetParentDirectoryAsAbsoluteUriTestElement test)
         {
             var basicUUri = new BasicUUri("test");
-            var result = basicUUri.TryGetParentDirectoryAsAbsoluteUri(test.AbsoluteUri, test.AbsoluteUriKind);
+            var result = basicUUri.TryGetParentDirectoryAsAbsoluteUri(test.AbsoluteUri);
 
             Assert.Equal(test.ExpectedResult, result);
         }

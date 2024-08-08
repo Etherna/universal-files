@@ -58,27 +58,27 @@ namespace Etherna.UniversalFiles
         // Protected methods.
         protected internal override UUriKind GetUriKindHelper(string uri) => GetUriKind(uri);
 
-        protected internal override (string AbsoluteUri, UUriKind UriKind)? TryGetParentDirectoryAsAbsoluteUri(
-            string absoluteUri,
-            UUriKind absoluteUriKind)
+        protected internal override UUri? TryGetParentDirectoryAsAbsoluteUri(UUri absoluteUri)
         {
-            switch (absoluteUriKind)
+            ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
+            
+            switch (absoluteUri.UriKind)
             {
                 case UUriKind.LocalAbsolute:
-                    var dirName = Path.GetDirectoryName(absoluteUri);
+                    var dirName = Path.GetDirectoryName(absoluteUri.OriginalUri);
                     return dirName is null ? null :
-                        (dirName, UUriKind.LocalAbsolute);
+                        new BasicUUri(dirName, UUriKind.LocalAbsolute);
 
                 case UUriKind.OnlineAbsolute:
-                    var segments = new Uri(absoluteUri, System.UriKind.Absolute).Segments;
+                    var segments = new Uri(absoluteUri.OriginalUri, System.UriKind.Absolute).Segments;
                     return segments.Length == 1 ? null : //if it's already root, return null
-                        (absoluteUri[..^segments.Last().Length], UUriKind.OnlineAbsolute);
+                        new BasicUUri(absoluteUri.OriginalUri[..^segments.Last().Length], UUriKind.OnlineAbsolute);
 
                 default: throw new InvalidOperationException("Invalid absolute uri kind. It should be well defined and absolute");
             }
         }
 
-        protected internal override (string AbsoluteUri, UUriKind UriKind) UriToAbsoluteUri(
+        protected internal override UUri UriToAbsoluteUri(
             string originalUri,
             string? baseDirectory,
             UUriKind uriKind)
@@ -98,22 +98,27 @@ namespace Etherna.UniversalFiles
                     RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
                     !Path.IsPathFullyQualified(originalUri) && //Ex: "/test"
                     baseDirectory is not null && Path.IsPathFullyQualified(baseDirectory) ?
-                        (Path.GetFullPath(originalUri, baseDirectory), UUriKind.LocalAbsolute) : //take unit from base directory
-                        (Path.GetFullPath(originalUri), UUriKind.LocalAbsolute),
+                        new BasicUUri(Path.GetFullPath(originalUri, baseDirectory), UUriKind.LocalAbsolute) : //take unit from base directory
+                        new BasicUUri(Path.GetFullPath(originalUri), UUriKind.LocalAbsolute),
 
                 UUriKind.LocalRelative =>
-                    (Path.GetFullPath(
+                    new BasicUUri(
+                        Path.GetFullPath(
                             originalUri,
                             baseDirectory is not null ?
                                 Path.GetFullPath(baseDirectory) : //GetFullPath is required when on windows baseDirectory is a root path without unit name. Ex: "/test"
                                 Directory.GetCurrentDirectory()),
                         UUriKind.LocalAbsolute),
 
-                UUriKind.OnlineAbsolute => (new Uri(originalUri, System.UriKind.Absolute).ToString(), UUriKind.OnlineAbsolute),
+                UUriKind.OnlineAbsolute => new BasicUUri(
+                    new Uri(originalUri, System.UriKind.Absolute).ToString(),
+                    UUriKind.OnlineAbsolute),
 
-                UUriKind.OnlineRelative => (new Uri(
-                    new Uri(baseDirectory!, System.UriKind.Absolute),
-                    string.Join('/', originalUri.Split('/', '\\').Select(Uri.EscapeDataString))).ToString(), UUriKind.OnlineAbsolute),
+                UUriKind.OnlineRelative => new BasicUUri(
+                    new Uri(
+                        new Uri(baseDirectory!, System.UriKind.Absolute),
+                        string.Join('/', originalUri.Split('/', '\\').Select(Uri.EscapeDataString))).ToString(),
+                    UUriKind.OnlineAbsolute),
 
                 _ => throw new InvalidOperationException("Can't find a valid uri kind")
             };

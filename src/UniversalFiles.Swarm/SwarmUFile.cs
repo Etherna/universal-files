@@ -13,6 +13,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using Etherna.BeeNet;
+using Etherna.BeeNet.Models;
 using System;
 using System.IO;
 using System.Text;
@@ -51,7 +52,7 @@ namespace Etherna.UniversalFiles
         {
             ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
             
-            var size = await beeClient.TryGetFileSizeAsync(absoluteUri.OriginalUri).ConfigureAwait(false);
+            var size = await beeClient.TryGetFileSizeAsync(SwarmAddress.FromString(absoluteUri.OriginalUri)).ConfigureAwait(false);
             if (size is null)
                 throw new InvalidOperationException();
             return (size.Value, null);

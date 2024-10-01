@@ -116,14 +116,14 @@ namespace Etherna.UniversalFiles
             }
         }
 
-        protected override Task<string?> TryGetFileNameAsync(string originalUri)
+        protected override Task<string?> TryGetFileNameAsync(UUri absoluteUri)
         {
-            ArgumentNullException.ThrowIfNull(originalUri, nameof(originalUri));
+            ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
             
-            if (originalUri.EndsWith('/') ||
-                originalUri.EndsWith('\\'))
+            if (absoluteUri.OriginalUri.EndsWith('/') ||
+                absoluteUri.OriginalUri.EndsWith('\\'))
                 return Task.FromResult<string?>(null);
-            return Task.FromResult<string?>(originalUri.Split('/', '\\').Last());
+            return Task.FromResult<string?>(absoluteUri.OriginalUri.Split('/', '\\').Last());
         }
 
         // Helpers.

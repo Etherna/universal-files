@@ -90,7 +90,12 @@ namespace Etherna.UniversalFiles
             return (result.Stream, contentEncoding);
         }
 
-        protected override Task<string?> TryGetFileNameAsync(string originalUri) =>
-            beeClient.TryGetFileNameAsync(originalUri);
+        protected override Task<string?> TryGetFileNameAsync(
+            UUri absoluteUri)
+        {
+            ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
+            
+            return beeClient.TryGetFileNameAsync(SwarmAddress.FromString(absoluteUri.OriginalUri!));
+        }
     }
 }

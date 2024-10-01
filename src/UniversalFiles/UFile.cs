@@ -125,8 +125,14 @@ namespace Etherna.UniversalFiles
             encoding ??= Encoding.UTF8;
             return encoding.GetString(content);
         }
-        
-        public Task<string?> TryGetFileNameAsync() => TryGetFileNameAsync(FileUri.OriginalUri);
+
+        public Task<string?> TryGetFileNameAsync(
+            UUriKind allowedUriKinds = UUriKind.All,
+            string? baseDirectory = null)
+        {
+            var absoluteUri = FileUri.ToAbsoluteUri(allowedUriKinds, baseDirectory);
+            return TryGetFileNameAsync(absoluteUri);
+        }
         
         // Protected methods.
         protected abstract Task<(bool Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> ExistsAsync(
@@ -139,6 +145,6 @@ namespace Etherna.UniversalFiles
         
         protected abstract Task<(Stream Stream, Encoding? Encoding)> ReadToStreamAsync(UUri absoluteUri);
 
-        protected abstract Task<string?> TryGetFileNameAsync(string originalUri);
+        protected abstract Task<string?> TryGetFileNameAsync(UUri absoluteUri);
     }
 }

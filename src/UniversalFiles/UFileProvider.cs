@@ -63,17 +63,21 @@ namespace Etherna.UniversalFiles
 
             if (outputUUri is null)
             {
-                var fileName = await inputUFile.TryGetFileNameAsync().ConfigureAwait(false);
-                outputUUri = fileName is null ?
-                    new BasicUUri(Path.GetTempFileName()) :
-                    new BasicUUri(Path.Join(Path.GetTempPath(), fileName));
+                var fileName = await inputUFile.TryGetFileNameAsync(allowedUriKinds, baseDirectory).ConfigureAwait(false);
+                if (fileName is null)
+                    outputUUri = new BasicUUri(Path.GetTempFileName(), UUriKind.LocalAbsolute);
+                else
+                {
+                    var tmpDirectory = Directory.CreateDirectory(Path.Join(Path.GetTempPath(), Guid.NewGuid().ToString()));
+                    outputUUri = new BasicUUri(Path.Join(tmpDirectory.FullName, fileName), UUriKind.LocalAbsolute);
+                }
             }
 
             using var inputFileStream = (await inputUFile.ReadToStreamAsync(allowedUriKinds, baseDirectory).ConfigureAwait(false)).Stream;
             using var outputFileStream = new FileStream(outputUUri.ToAbsoluteUri().OriginalUri, FileMode.Create);
             await inputFileStream.CopyToAsync(outputFileStream).ConfigureAwait(false);
 
-            return (BasicUFile)BuildNewUFile(outputUUri);
+            return BuildNewUFile(outputUUri);
         }
     }
 }

@@ -13,9 +13,11 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Etherna.UniversalFiles
 {
+    [SuppressMessage("Design", "CA1054:URI-like parameters should not be strings")]
     public abstract class UUri
     {
         // Constructor.
@@ -38,6 +40,8 @@ namespace Etherna.UniversalFiles
 
         // Properties.
         public string? DefaultBaseDirectory { get; }
+        
+        [SuppressMessage("Design", "CA1056:URI-like properties should not be strings")]
         public string OriginalUri { get; }
         public UUriKind UriKind { get; }
 

@@ -13,12 +13,14 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace Etherna.UniversalFiles
 {
+    [SuppressMessage("Design", "CA1054:URI-like parameters should not be strings")]
     public class BasicUUri(
         string uri,
         UUriKind allowedUriKinds = UUriKind.All,

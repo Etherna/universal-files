@@ -14,6 +14,7 @@
 
 using Etherna.BeeNet.Models;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Etherna.UniversalFiles
 {
@@ -24,6 +25,7 @@ namespace Etherna.UniversalFiles
         : UUri(uri.ToString(), GetUriKind(uri.ToString()) & allowedUriKinds, defaultBaseDirectory)
     {
         // Public static methods.
+        [SuppressMessage("Design", "CA1054:URI-like parameters should not be strings")]
         public static UUriKind GetUriKind(string uri)
         {
             ArgumentNullException.ThrowIfNull(uri, nameof(uri));

@@ -15,6 +15,7 @@
 using Etherna.BeeNet;
 using Etherna.BeeNet.Models;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,6 +27,7 @@ namespace Etherna.UniversalFiles
         UUri fileUri)
         : UFile(fileUri)
     {
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types")]
         protected override async Task<(bool Result, (byte[] ByteArray, Encoding? Encoding)? ContentCache)> ExistsAsync(
             UUri absoluteUri)
         {

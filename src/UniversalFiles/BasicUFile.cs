@@ -13,6 +13,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -147,6 +148,8 @@ namespace Etherna.UniversalFiles
             return (byteArrayContent, encoding);
         }
         
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types")]
+        [SuppressMessage("Usage", "CA2234:Pass system uri objects instead of strings")]
         private async Task<(Stream Stream, Encoding? Encoding)?> TryGetOnlineAsStreamAsync(
             string onlineAbsoluteUri)
         {
@@ -176,6 +179,7 @@ namespace Etherna.UniversalFiles
             }
         }
         
+        [SuppressMessage("Design", "CA1031:Do not catch general exception types")]
         private async Task<long?> TryGetOnlineByteSizeWithHeadRequestAsync(string absoluteUri)
         {
             try

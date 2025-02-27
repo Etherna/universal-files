@@ -2,19 +2,18 @@
 
   <PropertyGroup>
     <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RootNamespace>Etherna.UniversalFiles</RootNamespace>
-
+    
     <Authors>Etherna SA</Authors>
     <Description>Add support to Swarm on UniversalFiles</Description>
-
-    <LangVersion>12</LangVersion>
+    
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Nullable>enable</Nullable>
-    <IsAotCompatible>true</IsAotCompatible>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <NoWarn>$(NoWarn);NU5104</NoWarn>
-
+    <IsAotCompatible>true</IsAotCompatible>
+    
     <RepositoryUrl>https://github.com/Etherna/universal-files</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -28,7 +27,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Bee.Net.Client" Version="0.4.0-alpha.93" />
+    <PackageReference Include="Bee.Net.Client" Version="0.4.0-alpha.127" />
     <PackageReference Include="GitVersion.MsBuild" Version="6.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

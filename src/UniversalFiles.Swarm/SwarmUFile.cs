@@ -13,6 +13,7 @@
 // If not, see <https://www.gnu.org/licenses/>.
 
 using Etherna.BeeNet;
+using Etherna.BeeNet.Manifest;
 using Etherna.BeeNet.Models;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -97,7 +98,9 @@ namespace Etherna.UniversalFiles
         {
             ArgumentNullException.ThrowIfNull(absoluteUri, nameof(absoluteUri));
             
-            return beeClient.TryGetFileNameAsync(SwarmAddress.FromString(absoluteUri.OriginalUri!));
+            return beeClient.TryGetFileNameAsync(
+                SwarmAddress.FromString(absoluteUri.OriginalUri),
+                ManifestPathResolver.IdentityResolver);
         }
     }
 }
